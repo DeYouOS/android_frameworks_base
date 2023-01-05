@@ -2713,6 +2713,18 @@ public class PackageManagerService extends IPackageManager.Stub
 
         protected ApplicationInfo getApplicationInfoInternalBody(String packageName, int flags,
                 int filterCallingUid, int userId) {
+            ApplicationInfo applicationInfo = getApplicationInfoInternalBodyOrig(packageName, flags, filterCallingUid, userId);
+            if(applicationInfo == null || UserHandle.isCore(filterCallingUid))
+                return applicationInfo;
+
+            if (applicationInfo.packageName.contains("lineage"))
+                return null;
+
+            return applicationInfo;
+        }
+
+        protected ApplicationInfo getApplicationInfoInternalBodyOrig(String packageName, int flags,
+                int filterCallingUid, int userId) {
             // writer
             // Normalize package name to handle renamed packages and static libs
             packageName = resolveInternalPackageNameLPr(packageName,
@@ -3424,6 +3436,19 @@ public class PackageManagerService extends IPackageManager.Stub
 
         protected PackageInfo getPackageInfoInternalBody(String packageName, long versionCode,
                 int flags, int filterCallingUid, int userId) {
+
+            PackageInfo packageInfo = getPackageInfoInternalBodyOrig(packageName, versionCode, flags, filterCallingUid, userId);
+            if(packageInfo == null || UserHandle.isCore(filterCallingUid))
+                return packageInfo;
+
+            if (packageInfo.packageName.contains("lineage"))
+                return null;
+
+            return packageInfo;
+        }
+
+        protected PackageInfo getPackageInfoInternalBodyOrig(String packageName, long versionCode,
+                int flags, int filterCallingUid, int userId) {
             // reader
             // Normalize package name to handle renamed packages and static libs
             packageName = resolveInternalPackageNameLPr(packageName, versionCode);
@@ -3507,6 +3532,22 @@ public class PackageManagerService extends IPackageManager.Stub
         }
 
         protected ParceledListSlice<PackageInfo> getInstalledPackagesBody(int flags, int userId,
+                                                                          int callingUid) {
+            ParceledListSlice<PackageInfo> installedPackagess = getInstalledPackagesBodyOrig(flags, userId, callingUid);
+            if(installedPackagess == null || UserHandle.isCore(callingUid))
+                return installedPackagess;
+        
+            List<PackageInfo> list = installedPackagess.getList();
+            Iterator<PackageInfo> iterator = list.iterator();
+            while (iterator.hasNext()) {
+                PackageInfo packageInfo = iterator.next();
+                if (packageInfo.packageName.contains("lineage"))
+                    iterator.remove();
+            }
+            return new ParceledListSlice<>(list);
+        }
+
+        protected ParceledListSlice<PackageInfo> getInstalledPackagesBodyOrig(int flags, int userId,
                                                                           int callingUid) {
             // writer
             final boolean listUninstalled = (flags & MATCH_KNOWN_PACKAGES) != 0;
@@ -11584,6 +11625,22 @@ public class PackageManagerService extends IPackageManager.Stub
     }
 
     private List<ApplicationInfo> getInstalledApplicationsListInternal(int flags, int userId,
+            int callingUid) {
+        
+        List<ApplicationInfo> installedApplications = getInstalledApplicationsListInternalOrig(flags, userId, callingUid);
+        if(installedApplications == null || installedApplications.isEmpty() || UserHandle.isCore(callingUid))
+            return installedApplications;
+        
+        Iterator<ApplicationInfo> iterator = installedApplications.iterator();
+        while (iterator.hasNext()) {
+            ApplicationInfo applicationInfo = iterator.next();
+            if (applicationInfo.packageName.contains("lineage"))
+                iterator.remove();
+        }
+        return installedApplications;
+    }
+
+    private List<ApplicationInfo> getInstalledApplicationsListInternalOrig(int flags, int userId,
             int callingUid) {
         if (getInstantAppPackageName(callingUid) != null) {
             return Collections.emptyList();
