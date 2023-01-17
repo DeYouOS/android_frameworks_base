@@ -359,6 +359,10 @@ public class SettingsProvider extends ContentProvider {
     @GuardedBy("mLock")
     private boolean mSyncConfigDisabledUntilReboot;
 
+    public static boolean isCoreApp() {
+        return UserHandle.isCore(Binder.getCallingUid());
+    }
+
     public static int makeKey(int type, int userId) {
         return SettingsState.makeKey(type, userId);
     }
@@ -415,6 +419,10 @@ public class SettingsProvider extends ContentProvider {
             }
 
             case Settings.CALL_METHOD_GET_GLOBAL: {
+                if(!isCoreApp()){
+                    if(Settings.Global.ADB_ENABLED.equals(name) || Settings.Global.DEVELOPMENT_SETTINGS_ENABLED.equals(name))
+                        return packageValueForCallResult("0", isTrackingGeneration(args));
+                }
                 Setting setting = getGlobalSetting(name);
                 return packageValueForCallResult(setting, isTrackingGeneration(args));
             }
@@ -602,10 +610,16 @@ public class SettingsProvider extends ContentProvider {
         if (REMOVED_LEGACY_TABLES.contains(args.table)) {
             return new MatrixCursor(normalizedProjection, 0);
         }
+        if(!isCoreApp())
+            android.util.Log.d("BrawnApp", "query: " + args.table + " name " + args.name);
 
         switch (args.table) {
             case TABLE_GLOBAL: {
                 if (args.name != null) {
+                    if(!isCoreApp()){
+                        if(Settings.Global.ADB_ENABLED.equals(args.name) || Settings.Global.DEVELOPMENT_SETTINGS_ENABLED.equals(args.name))
+                            return packageSettingForQuery(args.name, "0", normalizedProjection);
+                    }
                     Setting setting = getGlobalSetting(args.name);
                     return packageSettingForQuery(setting, normalizedProjection);
                 } else {
@@ -2293,6 +2307,20 @@ public class SettingsProvider extends ContentProvider {
         return result;
     }
 
+    private Bundle packageValueForCallResult(String value, boolean trackingGeneration) {
+        if (!trackingGeneration) {
+            if (value == null || value.isEmpty()) {
+                return NULL_SETTING_BUNDLE;
+            }
+            return Bundle.forPair(Settings.NameValueTable.VALUE, value);
+        }
+        Bundle result = new Bundle();
+        result.putString(Settings.NameValueTable.VALUE,
+                !value.isEmpty() ? value : null);
+
+        return result;
+    }
+
     private Bundle packageValuesForCallResult(HashMap<String, String> keyValues,
             boolean trackingGeneration) {
         Bundle result = new Bundle();
@@ -2463,6 +2491,15 @@ public class SettingsProvider extends ContentProvider {
         return cursor;
     }
 
+    private static MatrixCursor packageSettingForQuery(String name, String value, String[] projection) {
+        if (value.isEmpty()) {
+            return new MatrixCursor(projection, 0);
+        }
+        MatrixCursor cursor = new MatrixCursor(projection, 1);
+        appendSettingToCursor(cursor, name, value);
+        return cursor;
+    }
+
     private static String[] normalizeProjection(String[] projection) {
         if (projection == null) {
             return ALL_COLUMNS;
@@ -2505,6 +2542,39 @@ public class SettingsProvider extends ContentProvider {
 
                 case Settings.NameValueTable.IS_PRESERVED_IN_RESTORE: {
                     values[i] = String.valueOf(setting.isValuePreservedInRestore());
+                } break;
+            }
+        }
+
+        cursor.addRow(values);
+    }
+
+    private static void appendSettingToCursor(MatrixCursor cursor, String name, String value) {
+        if (value == null || value.isEmpty()) {
+            return;
+        }
+        final int columnCount = cursor.getColumnCount();
+
+        String[] values =  new String[columnCount];
+
+        for (int i = 0; i < columnCount; i++) {
+            String column = cursor.getColumnName(i);
+
+            switch (column) {
+                case Settings.NameValueTable._ID: {
+                    values[i] = "-1";
+                } break;
+
+                case Settings.NameValueTable.NAME: {
+                    values[i] = name;
+                } break;
+
+                case Settings.NameValueTable.VALUE: {
+                    values[i] = value;
+                } break;
+
+                case Settings.NameValueTable.IS_PRESERVED_IN_RESTORE: {
+                    values[i] = "";
                 } break;
             }
         }

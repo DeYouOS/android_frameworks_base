@@ -259,4 +259,9 @@
     <!-- Default for Settings.Secure.ONE_HANDED_MODE_ACTIVATED -->
     <bool name="def_one_handed_mode_activated">false</bool>
 
+    <!-- Default for Settings.Secure.ENABLED_INPUT_METHODS  -->
+    <string name="def_input_method">com.sohu.inputmethod.sogou/.SogouIME</string>
+
+    <integer name="def_time_12_24">24</integer>
+
 </resources>

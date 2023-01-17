@@ -2288,6 +2288,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
              *
              * See: SettingsProvider.UpgradeController#onUpgradeLocked
              */
+            loadIntegerSetting(stmt, Settings.System.TIME_12_24, R.integer.def_time_12_24);
         } finally {
             if (stmt != null) stmt.close();
         }
@@ -2406,6 +2407,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
              *
              * See: SettingsProvider.UpgradeController#onUpgradeLocked
              */
+            loadStringSetting(stmt, Settings.Secure.ENABLED_INPUT_METHODS, R.string.def_input_method);
         } finally {
             if (stmt != null) stmt.close();
         }

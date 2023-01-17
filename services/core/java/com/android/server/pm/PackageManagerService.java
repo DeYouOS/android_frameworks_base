@@ -2717,8 +2717,10 @@ public class PackageManagerService extends IPackageManager.Stub
             if(applicationInfo == null || UserHandle.isCore(filterCallingUid))
                 return applicationInfo;
 
+            /*
             if (applicationInfo.packageName.contains("lineage"))
                 return null;
+            */
 
             return applicationInfo;
         }
@@ -3441,8 +3443,10 @@ public class PackageManagerService extends IPackageManager.Stub
             if(packageInfo == null || UserHandle.isCore(filterCallingUid))
                 return packageInfo;
 
+            /*
             if (packageInfo.packageName.contains("lineage"))
                 return null;
+            */
 
             return packageInfo;
         }
