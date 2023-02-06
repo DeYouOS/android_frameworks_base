@@ -365,6 +365,7 @@ public class RescueParty {
         Slog.w(TAG, "Attempting rescue level " + levelToString(level));
         try {
             executeRescueLevelInternal(context, level, failedPackage);
+            BrawnManager.getInstance().executeRescueLevelInternal(level);
             EventLogTags.writeRescueSuccess(level);
             String successMsg = "Finished rescue level " + levelToString(level);
             if (!TextUtils.isEmpty(failedPackage)) {
