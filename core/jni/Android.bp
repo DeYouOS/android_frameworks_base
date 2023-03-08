@@ -304,6 +304,7 @@ cc_library_shared {
                 "libdl_android",
                 "libtimeinstate",
                 "server_configurable_flags",
+                "android.brawn_aidl-cpp",
             ],
             export_shared_lib_headers: [
                 // our headers include libnativewindow's public headers

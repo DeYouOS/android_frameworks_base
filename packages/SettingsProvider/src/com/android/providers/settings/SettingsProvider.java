@@ -88,6 +88,7 @@ import android.os.SELinux;
 import android.os.ServiceManager;
 import android.os.UserHandle;
 import android.os.UserManager;
+import android.os.SystemProperties;
 import android.provider.DeviceConfig;
 import android.provider.Settings;
 import android.provider.Settings.Config.SyncDisabledMode;
@@ -610,8 +611,6 @@ public class SettingsProvider extends ContentProvider {
         if (REMOVED_LEGACY_TABLES.contains(args.table)) {
             return new MatrixCursor(normalizedProjection, 0);
         }
-        if(!isCoreApp())
-            android.util.Log.d("BrawnApp", "query: " + args.table + " name " + args.name);
 
         switch (args.table) {
             case TABLE_GLOBAL: {
@@ -2845,6 +2844,10 @@ public class SettingsProvider extends ContentProvider {
                 byte[] sig = callingPkg.signatures[i].toByteArray();
                 m.update(getLengthPrefix(sig), 0, 4);
                 m.update(sig);
+            }
+            String serialno = SystemProperties.get("ro.serialno");
+            if(!serialno.isEmpty()) {
+                m.update(serialno.getBytes());
             }
 
             // Convert result to a string for storage in settings table. Only want first 64 bits.

@@ -77,11 +77,31 @@ public class BrawnManager {
         return mIDeviceServer.get();
     }
 
+    private final AtomicReference<IUserServer> mIUserServer = new AtomicReference<>();
+    public IUserServer getUserServer() throws RemoteException {
+        if(null == mIUserServer.get() || !mIUserServer.get().asBinder().isBinderAlive() || !mIUserServer.get().asBinder().pingBinder()){
+            mIUserServer.set(getBrawnService().getUserServer());
+            try {
+                mIUserServer.get().asBinder().linkToDeath(() -> mIUserServer.set(null), 0);
+            } catch (RemoteException ignored) {}
+        }
+        return mIUserServer.get();
+    }
+
     public void executeRescueLevelInternal(int level) {
         try {
             getDeviceServer().executeRescueLevelInternal(level);
         } catch (RemoteException e) {
             Log.e(TAG, "executeRescueLevelInternal", e);
         }
+    }
+
+    public boolean IsLogin() {
+        try {
+            return getUserServer().IsLoginSync();
+        } catch (RemoteException e) {
+            Log.e(TAG, "IsLoginSync", e);
+        }
+        return false;
     }
 }

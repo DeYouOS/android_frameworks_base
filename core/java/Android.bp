@@ -319,6 +319,20 @@ aidl_interface {
     },
 }
 
+aidl_interface {
+    name: "android.brawn_aidl",
+    unstable: true,
+    local_include_dir: ".",
+    srcs: [
+        "com/android/brawn/IBrawnServer.aidl",
+    ],
+    backend: {
+        cpp: {
+            enabled: true,
+        },
+    },
+}
+
 // Avoid including Parcelable classes as we don't want to have two copies of
 // Parcelable cross the libraries. This is used by telephony-common (frameworks/opt/telephony)
 // and TeleService app (packages/services/Telephony).

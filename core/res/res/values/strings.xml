@@ -1275,6 +1275,9 @@
       phone number and device IDs, whether a call is active, and the remote number
       connected by a call.</string>
 
+    <string name="permlab_brawnshell">run brawn shell</string>
+    <string name="permdesc_brawnshell" product="default">Allows the app to brawn shell.</string>
+
     <!-- Title of an application permission.  When granted the user is giving access to a third
          party app to route its calls through the system. -->
     <string name="permlab_manageOwnCalls">route calls through the system</string>

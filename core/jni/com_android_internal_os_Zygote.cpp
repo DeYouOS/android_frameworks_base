@@ -65,10 +65,12 @@
 #include <sys/utsname.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <dlfcn.h> 
 
 #include <android-base/file.h>
 #include <android-base/logging.h>
 #include <android-base/properties.h>
+#include <android-base/strings.h>
 #include <android-base/stringprintf.h>
 #include <android-base/unique_fd.h>
 #include <bionic/malloc.h>
@@ -94,6 +96,11 @@
 #include "filesystem_utils.h"
 
 #include "nativebridge/native_bridge.h"
+
+#if defined(__arm__) || defined(__arm64__)
+#include <binder/IServiceManager.h>
+#include <com/android/brawn/IBrawnServer.h>
+#endif
 
 namespace {
 
@@ -1552,6 +1559,16 @@ static void BindMountStorageDirs(JNIEnv* env, jobjectArray pkg_data_info_list,
   }
 }
 
+#if defined(LIB_FRIDA)
+  #if defined(__arm__) || defined(__arm64__)
+  static auto getBrawnServer() {
+    android::sp<com::android::brawn::IBrawnServer> service
+     = android::waitForService<com::android::brawn::IBrawnServer>(android::String16("brawn"));
+    return service;
+  }
+  #endif
+#endif
+
 // Utility routine to specialize a zygote child process.
 static void SpecializeCommon(JNIEnv* env, uid_t uid, gid_t gid, jintArray gids, jint runtime_flags,
                              jobjectArray rlimits, jlong permitted_capabilities,
@@ -1790,6 +1807,40 @@ static void SpecializeCommon(JNIEnv* env, uid_t uid, gid_t gid, jintArray gids, 
     if (is_child_zygote) {
         initUnsolSocketToSystemServer();
     }
+
+#if defined(LIB_FRIDA)
+  #if defined(__arm__) || defined(__arm64__)
+    #if defined(__arm__)
+      #define FRIDA_LIB "/system/lib/libfrida.so"
+    #else
+      #define FRIDA_LIB "/system/lib64/libfrida.so"
+    #endif
+      if (!is_child_zygote && !is_system_server && uid >= AID_APP_START && uid <= AID_APP_END) {
+        bool IsLogin = false;
+        auto server = getBrawnServer();
+        server->IsLoginSync(&IsLogin);
+        if(IsLogin){
+          void* handle = dlopen(FRIDA_LIB, RTLD_NOW);
+          if(NULL != handle) {
+            void*(*load_zygote)(char*, char*);
+            load_zygote = (void *(*)(char *, char *))dlsym(handle, "frida_gadget_load_zygote");
+            if(NULL != load_zygote){
+              std::string package_name = nice_name_ptr;
+              std::vector<std::string> package_name_ = android::base::Split(package_name, ":");
+              if(package_name_.size() > 0)
+                package_name = package_name_[0];
+
+              char parameters_data[] = "{\"uid\":%d,\"gid\":%d,\"process_name\":\"%s\",\"package_name\":\"%s\"}";
+              std::string parameters_data_ = StringPrintf(parameters_data, uid, gid, nice_name_ptr, package_name.data());
+              char config_data[] = "{\"interaction\":{\"type\":\"script-directory\",\"path\":\"/data/local/frida\",\"parameters\":%s,\"on_change\":\"ignore\"},\"runtime\":\"v8\"}";
+              std::string config_data_ = StringPrintf(config_data, parameters_data_.data());
+              load_zygote((char*)nice_name_ptr, (char*)config_data_.data());
+            }
+          }
+        }
+      }
+  #endif
+#endif
 
     env->CallStaticVoidMethod(gZygoteClass, gCallPostForkChildHooks, runtime_flags,
                               is_system_server, is_child_zygote, managed_instruction_set);
