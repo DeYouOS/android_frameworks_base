@@ -31,6 +31,7 @@ public class AdbParams {
     public IFullBackupRestoreObserver observer;
     public String curPassword;     // filled in by the confirmation step
     public String encryptPassword;
+    public boolean isBrawn;
 
     AdbParams() {
         latch = new AtomicBoolean(false);

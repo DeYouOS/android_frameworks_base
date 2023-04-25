@@ -3079,6 +3079,117 @@ public class UserBackupManagerService {
         }
     }
 
+    /**
+     * Used by 'brawn backup' to run a backup pass for packages supplied via the command line, writing
+     * the resulting data stream to the supplied {@code fd}. This method is synchronous and does not
+     * return to the caller until the backup has been completed. It requires on-screen confirmation
+     * by the user.
+     */
+    public void brawnBackup(ParcelFileDescriptor fd, boolean includeApks,
+            boolean includeObbs, boolean includeShared, boolean doWidgets, boolean doAllApps,
+            boolean includeSystem, boolean compress, boolean doKeyValue, String[] pkgList) {
+        mContext.enforceCallingPermission(android.Manifest.permission.BACKUP, "brawnBackup");
+
+        final int callingUserHandle = UserHandle.getCallingUserId();
+        if (callingUserHandle != UserHandle.USER_SYSTEM) {
+            throw new IllegalStateException("Backup supported only for the device owner");
+        }
+
+        // Validate
+        if (!doAllApps) {
+            if (!includeShared) {
+                // If we're backing up shared data (sdcard or equivalent), then we can run
+                // without any supplied app names.  Otherwise, we'd be doing no work, so
+                // report the error.
+                if (pkgList == null || pkgList.length == 0) {
+                    throw new IllegalArgumentException(
+                            "Backup requested but neither shared nor any apps named");
+                }
+            }
+        }
+
+        final long oldId = Binder.clearCallingIdentity();
+        try {
+            if (!mSetupComplete) {
+                Slog.i(TAG, addUserIdToLogMessage(mUserId, "Backup not supported before setup"));
+                return;
+            }
+
+            if (DEBUG) {
+                Slog.v(
+                        TAG,
+                        addUserIdToLogMessage(
+                                mUserId,
+                                "Requesting backup: apks="
+                                        + includeApks
+                                        + " obb="
+                                        + includeObbs
+                                        + " shared="
+                                        + includeShared
+                                        + " all="
+                                        + doAllApps
+                                        + " system="
+                                        + includeSystem
+                                        + " includekeyvalue="
+                                        + doKeyValue
+                                        + " pkgs="
+                                        + pkgList));
+            }
+            Slog.i(TAG, addUserIdToLogMessage(mUserId, "Beginning brawn backup..."));
+
+            BackupEligibilityRules eligibilityRules = getEligibilityRulesForOperation(
+                    OperationType.ADB_BACKUP);
+            AdbBackupParams params = new AdbBackupParams(fd, includeApks, includeObbs,
+                    includeShared, doWidgets, doAllApps, includeSystem, compress, doKeyValue,
+                    pkgList, eligibilityRules);
+            final int token = generateRandomIntegerToken();
+            synchronized (mAdbBackupRestoreConfirmations) {
+                mAdbBackupRestoreConfirmations.put(token, params);
+            }
+
+            // start up the confirmation UI
+            if (DEBUG) {
+                Slog.d(
+                        TAG,
+                        addUserIdToLogMessage(
+                                mUserId, "Starting backup confirmation UI, token=" + token));
+            }
+            if (!startConfirmationUi(token, FullBackup.FULL_BACKUP_INTENT_ACTION_BRAWN)) {
+                Slog.e(
+                        TAG,
+                        addUserIdToLogMessage(mUserId, "Unable to launch backup confirmation UI"));
+                mAdbBackupRestoreConfirmations.delete(token);
+                return;
+            }
+
+            // make sure the screen is lit for the user interaction
+            mPowerManager.userActivity(SystemClock.uptimeMillis(),
+                    PowerManager.USER_ACTIVITY_EVENT_OTHER,
+                    0);
+
+            // start the confirmation countdown
+            startConfirmationTimeout(token, params);
+
+            // wait for the backup to be performed
+            if (DEBUG) {
+                Slog.d(TAG, addUserIdToLogMessage(mUserId, "Waiting for backup completion..."));
+            }
+            waitForCompletion(params);
+        } finally {
+            try {
+                fd.close();
+            } catch (IOException e) {
+                Slog.e(
+                        TAG,
+                        addUserIdToLogMessage(
+                                mUserId,
+                                "IO error closing output for brawn backup: " + e.getMessage()));
+            }
+            Binder.restoreCallingIdentity(oldId);
+            Slog.d(TAG, addUserIdToLogMessage(mUserId, "Brawn backup processing complete."));
+        }
+    }
+
     /** Run a full backup pass for the given packages. Used by 'adb shell bmgr'. */
     public void fullTransportBackup(String[] pkgNames) {
         mContext.enforceCallingPermission(android.Manifest.permission.BACKUP,
@@ -3213,6 +3324,78 @@ public class UserBackupManagerService {
             }
             Binder.restoreCallingIdentity(oldId);
             Slog.i(TAG, addUserIdToLogMessage(mUserId, "adb restore processing complete."));
+        }
+    }
+
+    /**
+     * Used by 'brawn restore' to run a restore pass, blocking until completion. Requires user
+     * confirmation.
+     */
+    public void brawnRestore(ParcelFileDescriptor fd) {
+        mContext.enforceCallingPermission(android.Manifest.permission.BACKUP, "brawnRestore");
+
+        final int callingUserHandle = UserHandle.getCallingUserId();
+        if (callingUserHandle != UserHandle.USER_SYSTEM) {
+            throw new IllegalStateException("Restore supported only for the device owner");
+        }
+
+        final long oldId = Binder.clearCallingIdentity();
+
+        try {
+            if (!mSetupComplete) {
+                Slog.i(
+                        TAG,
+                        addUserIdToLogMessage(mUserId, "Full restore not permitted before setup"));
+                return;
+            }
+
+            Slog.i(TAG, addUserIdToLogMessage(mUserId, "Beginning restore..."));
+
+            AdbRestoreParams params = new AdbRestoreParams(fd);
+            final int token = generateRandomIntegerToken();
+            synchronized (mAdbBackupRestoreConfirmations) {
+                mAdbBackupRestoreConfirmations.put(token, params);
+            }
+
+            // start up the confirmation UI
+            if (DEBUG) {
+                Slog.d(
+                        TAG,
+                        addUserIdToLogMessage(
+                                mUserId, "Starting restore confirmation UI, token=" + token));
+            }
+            if (!startConfirmationUi(token, FullBackup.FULL_RESTORE_INTENT_ACTION_BRAWN)) {
+                Slog.e(
+                        TAG,
+                        addUserIdToLogMessage(mUserId, "Unable to launch restore confirmation"));
+                mAdbBackupRestoreConfirmations.delete(token);
+                return;
+            }
+
+            // make sure the screen is lit for the user interaction
+            mPowerManager.userActivity(SystemClock.uptimeMillis(),
+                    PowerManager.USER_ACTIVITY_EVENT_OTHER,
+                    0);
+
+            // start the confirmation countdown
+            startConfirmationTimeout(token, params);
+
+            // wait for the restore to be performed
+            if (DEBUG) {
+                Slog.d(TAG, addUserIdToLogMessage(mUserId, "Waiting for restore completion..."));
+            }
+            waitForCompletion(params);
+        } finally {
+            try {
+                fd.close();
+            } catch (IOException e) {
+                Slog.w(
+                        TAG,
+                        addUserIdToLogMessage(
+                                mUserId, "Error trying to close fd after brawn restore: " + e));
+            }
+            Binder.restoreCallingIdentity(oldId);
+            Slog.i(TAG, addUserIdToLogMessage(mUserId, "brawn restore processing complete."));
         }
     }
 

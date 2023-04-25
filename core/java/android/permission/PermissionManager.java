@@ -1239,6 +1239,32 @@ public final class PermissionManager {
         return false;
     }
 
+    /**
+     * @hide
+     */
+    @SystemApi
+    public boolean isRootAppPermission(@Nullable String packageName, int userId) {
+        try {
+            return mPermissionManager.isRootAppPermission(packageName, userId);
+        } catch (RemoteException e) {
+            e.rethrowFromSystemServer();
+        }
+        return false;
+    }
+
+    /**
+     * @hide
+     */
+    @SystemApi
+    public boolean setRootAppPermission(@Nullable String packageName, boolean isEnable, int userId) {
+        try {
+            return mPermissionManager.setRootAppPermission(packageName, isEnable, userId);
+        } catch (RemoteException e) {
+            e.rethrowFromSystemServer();
+        }
+        return false;
+    }
+
     /* @hide */
     private static int checkPermissionUncached(@Nullable String permission, int pid, int uid) {
         final IActivityManager am = ActivityManager.getService();

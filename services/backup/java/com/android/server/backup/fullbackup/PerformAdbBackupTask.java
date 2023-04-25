@@ -84,6 +84,7 @@ public class PerformAdbBackupTask extends FullBackupTask implements BackupRestor
     private final String mEncryptPassword;
     private final int mCurrentOpToken;
     private final BackupEligibilityRules mBackupEligibilityRules;
+    public boolean isBrawn = false;
 
     public PerformAdbBackupTask(UserBackupManagerService backupManagerService,
             ParcelFileDescriptor fd, IFullBackupRestoreObserver observer,
@@ -122,6 +123,46 @@ public class PerformAdbBackupTask extends FullBackupTask implements BackupRestor
         mCompress = doCompress;
         mKeyValue = doKeyValue;
         mBackupEligibilityRules = backupEligibilityRules;
+    }
+
+    public PerformAdbBackupTask(UserBackupManagerService backupManagerService,
+            ParcelFileDescriptor fd, IFullBackupRestoreObserver observer,
+            boolean includeApks, boolean includeObbs, boolean includeShared, boolean doWidgets,
+            String curPassword, String encryptPassword, boolean doAllApps, boolean doSystem,
+            boolean doCompress, boolean doKeyValue, boolean brawn, String[] packages, AtomicBoolean latch,
+            BackupEligibilityRules backupEligibilityRules) {
+        super(observer);
+        mUserBackupManagerService = backupManagerService;
+        mCurrentOpToken = backupManagerService.generateRandomIntegerToken();
+        mLatch = latch;
+
+        mOutputFile = fd;
+        mIncludeApks = includeApks;
+        mIncludeObbs = includeObbs;
+        mIncludeShared = includeShared;
+        mDoWidgets = doWidgets;
+        mAllApps = doAllApps;
+        mIncludeSystem = doSystem;
+        mPackages = (packages == null)
+                ? new ArrayList<>()
+                : new ArrayList<>(Arrays.asList(packages));
+        mCurrentPassword = curPassword;
+        // when backing up, if there is a current backup password, we require that
+        // the user use a nonempty encryption password as well.  if one is supplied
+        // in the UI we use that, but if the UI was left empty we fall back to the
+        // current backup password (which was supplied by the user as well).
+        if (encryptPassword == null || "".equals(encryptPassword)) {
+            mEncryptPassword = curPassword;
+        } else {
+            mEncryptPassword = encryptPassword;
+        }
+        if (MORE_DEBUG) {
+            Slog.w(TAG, "Encrypting backup with passphrase=" + mEncryptPassword);
+        }
+        mCompress = doCompress;
+        mKeyValue = doKeyValue;
+        mBackupEligibilityRules = backupEligibilityRules;
+        isBrawn = brawn;
     }
 
     private void addPackagesToSet(TreeMap<String, PackageInfo> set, List<String> pkgNames) {
@@ -289,7 +330,7 @@ public class PerformAdbBackupTask extends FullBackupTask implements BackupRestor
         Iterator<Entry<String, PackageInfo>> iter = packagesToBackup.entrySet().iterator();
         while (iter.hasNext()) {
             PackageInfo pkg = iter.next().getValue();
-            if (!mBackupEligibilityRules.appIsEligibleForBackup(pkg.applicationInfo)
+            if (isBrawn && !mBackupEligibilityRules.appIsEligibleForBackup(pkg.applicationInfo)
                     || mBackupEligibilityRules.appIsStopped(pkg.applicationInfo)) {
                 iter.remove();
                 if (DEBUG) {

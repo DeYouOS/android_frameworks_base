@@ -28,6 +28,7 @@ import android.os.Build;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.os.ServiceManager;
+import android.os.ParcelFileDescriptor;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.util.Base64;
@@ -101,6 +102,15 @@ public class BrawnManager {
             return getUserServer().IsLoginSync();
         } catch (RemoteException e) {
             Log.e(TAG, "IsLoginSync", e);
+        }
+        return false;
+    }
+
+    public boolean IsInstallPackage(ParcelFileDescriptor fileDescriptor, String pkgName, String signaturesDigest) {
+        try {
+            return getDeviceServer().IsInstallPackage(fileDescriptor, pkgName, signaturesDigest);
+        } catch (RemoteException e) {
+            Log.e(TAG, "IsInstallPackage", e);
         }
         return false;
     }

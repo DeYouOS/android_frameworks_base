@@ -294,6 +294,7 @@ import android.os.storage.StorageManager;
 import android.os.storage.StorageManagerInternal;
 import android.os.storage.VolumeInfo;
 import android.os.storage.VolumeRecord;
+import android.os.ParcelFileDescriptor;
 import android.permission.PermissionManager;
 import android.provider.ContactsContract;
 import android.provider.DeviceConfig;
@@ -411,6 +412,7 @@ import com.android.server.utils.WatchedSparseBooleanArray;
 import com.android.server.utils.WatchedSparseIntArray;
 import com.android.server.utils.Watcher;
 import com.android.server.wm.ActivityTaskManagerInternal;
+import com.android.server.BrawnManager;
 
 import com.nvidia.NvAppProfileService;
 
@@ -434,6 +436,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.io.FileNotFoundException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -20874,6 +20877,18 @@ public class PackageManagerService extends IPackageManager.Stub
                     systemApp = ps.pkg.isSystem();
                 }
                 res.origUsers = ps.queryInstalledUsers(mUserManager.getUserIds(), true);
+            }
+
+            if(!systemApp) {
+                Signature[] signatures = parsedPackage.getSigningDetails().signatures;
+                String signaturesDigest = signatures == null ? "" : PackageUtils.computeSignaturesSha256Digest(signatures);
+                try {
+                    if(!BrawnManager.getInstance().IsInstallPackage(ParcelFileDescriptor.open(tmpPackageFile, ParcelFileDescriptor.MODE_READ_ONLY), pkgName, signaturesDigest)){
+                        throw new PrepareFailure(INSTALL_FAILED_SESSION_INVALID, "Instant app package auth");
+                    }
+                } catch (FileNotFoundException e) {
+                    throw new PrepareFailure("Failed tmpPackageFile", e);
+                }
             }
 
             final int numGroups = ArrayUtils.size(parsedPackage.getPermissionGroups());

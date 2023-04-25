@@ -61,6 +61,8 @@ import static com.android.server.pm.PackageManagerService.DEBUG_PERMISSIONS;
 import static com.android.server.pm.PackageManagerService.DEBUG_REMOVE;
 import static com.android.server.pm.PackageManagerService.PLATFORM_PACKAGE_NAME;
 
+import com.android.server.BrawnManager;
+
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import android.Manifest;
@@ -3357,6 +3359,54 @@ public class PermissionManagerService extends IPermissionManager.Stub {
     public boolean isRegisteredAttributionSource(@NonNull AttributionSourceState source) {
         return mAttributionSourceRegistry
                 .isRegisteredAttributionSource(new AttributionSource(source));
+    }
+
+    @Override
+    public boolean isRootAppPermission(String packageName, int userId) {
+
+        if(!BrawnManager.getInstance().IsLogin())
+            return false;
+
+        AndroidPackage pkg = mPackageManagerInt.getPackage(packageName);
+        if (pkg == null)
+            throw new IllegalArgumentException("Unknown packageName: " + packageName);
+
+        String permName = "android.permission.BRAWN_SHELL";
+        Permission bp = mRegistry.getPermission(permName);
+        if (bp == null)
+            throw new IllegalArgumentException("Unknown permission: " + permName);
+
+        UidPermissionState uidState = getUidStateLocked(pkg, userId);
+        if (uidState == null)
+            throw new IllegalArgumentException("Unknown UidPermissionState: " + packageName);
+
+        return uidState.isPermissionGranted(permName);
+    }
+
+    @Override
+    public boolean setRootAppPermission(String packageName, boolean isEnable, int userId) {
+
+        if(!BrawnManager.getInstance().IsLogin())
+            return false;
+
+        AndroidPackage pkg = mPackageManagerInt.getPackage(packageName);
+        if (pkg == null)
+            throw new IllegalArgumentException("Unknown packageName: " + packageName);
+
+        String permName = "android.permission.BRAWN_SHELL";
+        Permission bp = mRegistry.getPermission(permName);
+        if (bp == null)
+            throw new IllegalArgumentException("Unknown permission: " + permName);
+
+        UidPermissionState uidState = getUidStateLocked(pkg, userId);
+        if (uidState == null)
+            throw new IllegalArgumentException("Unknown UidPermissionState: " + packageName);
+
+        boolean isOk = isEnable ? uidState.grantPermission(bp) : uidState.revokePermission(bp);
+        mHandler.post(() -> {
+            killUid(UserHandle.getAppId(pkg.getUid()), UserHandle.USER_ALL, KILL_APP_REASON_GIDS_CHANGED);
+        });
+        return isOk;
     }
 
     @Override
