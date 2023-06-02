@@ -412,6 +412,7 @@ import com.android.server.utils.WatchedSparseBooleanArray;
 import com.android.server.utils.WatchedSparseIntArray;
 import com.android.server.utils.Watcher;
 import com.android.server.wm.ActivityTaskManagerInternal;
+import com.android.server.brawn.BrawnVirtualIdInternal;
 import com.android.server.BrawnManager;
 
 import com.nvidia.NvAppProfileService;
@@ -3443,15 +3444,15 @@ public class PackageManagerService extends IPackageManager.Stub
                 int flags, int filterCallingUid, int userId) {
 
             PackageInfo packageInfo = getPackageInfoInternalBodyOrig(packageName, versionCode, flags, filterCallingUid, userId);
-            if(packageInfo == null || UserHandle.isCore(filterCallingUid))
+            if(packageInfo != null)
                 return packageInfo;
 
-            /*
-            if (packageInfo.packageName.contains("lineage"))
-                return null;
-            */
-
-            return packageInfo;
+            if(BrawnVirtualIdInternal.getInstance().isPackageInfo(packageName)) {
+                packageInfo = getPackageInfoInternalBodyOrig("android", PackageManager.VERSION_CODE_HIGHEST, flags, filterCallingUid, userId);
+                packageInfo.packageName = packageName;
+                return packageInfo;
+            }
+            return null;
         }
 
         protected PackageInfo getPackageInfoInternalBodyOrig(String packageName, long versionCode,

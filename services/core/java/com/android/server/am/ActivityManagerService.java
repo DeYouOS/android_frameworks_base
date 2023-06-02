@@ -399,6 +399,7 @@ import com.android.server.wm.ActivityTaskManagerService;
 import com.android.server.wm.WindowManagerInternal;
 import com.android.server.wm.WindowManagerService;
 import com.android.server.wm.WindowProcessController;
+import com.android.server.brawn.BrawnVirtualIdInternal;
 
 import dalvik.system.VMRuntime;
 
@@ -12015,6 +12016,15 @@ public class ActivityManagerService extends IActivityManager.Stub
     }
 
     public int bindIsolatedService(IApplicationThread caller, IBinder token, Intent service,
+            String resolvedType, IServiceConnection connection, int flags, String instanceName,
+            String callingPackage, int userId) throws TransactionTooLargeException {
+        if(BrawnVirtualIdInternal.getInstance().bindService(service, connection))
+            return 1;
+
+        return bindIsolatedServiceOrig(caller, token, service, resolvedType, connection, flags, instanceName, callingPackage, userId);
+    }
+
+    public int bindIsolatedServiceOrig(IApplicationThread caller, IBinder token, Intent service,
             String resolvedType, IServiceConnection connection, int flags, String instanceName,
             String callingPackage, int userId) throws TransactionTooLargeException {
         enforceNotIsolatedCaller("bindService");

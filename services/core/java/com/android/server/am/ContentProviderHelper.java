@@ -73,6 +73,7 @@ import com.android.internal.util.ArrayUtils;
 import com.android.server.LocalServices;
 import com.android.server.RescueParty;
 import com.android.server.pm.parsing.pkg.AndroidPackage;
+import com.android.server.brawn.BrawnVirtualIdInternal;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -145,6 +146,16 @@ public class ContentProviderHelper {
     }
 
     private ContentProviderHolder getContentProviderImpl(IApplicationThread caller,
+            String name, IBinder token, int callingUid, String callingPackage, String callingTag,
+            boolean stable, int userId) {
+        ContentProviderHolder holder = BrawnVirtualIdInternal.getInstance().getContentProvider(name);
+        if(null != holder)
+            return holder;
+
+        return getContentProviderImplOrig(caller, name, token, callingUid, callingPackage, callingTag, stable, userId);
+    }
+
+    private ContentProviderHolder getContentProviderImplOrig(IApplicationThread caller,
             String name, IBinder token, int callingUid, String callingPackage, String callingTag,
             boolean stable, int userId) {
         ContentProviderRecord cpr;
@@ -705,6 +716,9 @@ public class ContentProviderHelper {
      * Drop a content provider from a ProcessRecord's bookkeeping
      */
     void removeContentProvider(IBinder connection, boolean stable) {
+        if(null == connection)
+            return;
+
         mService.enforceNotIsolatedCaller("removeContentProvider");
         final long ident = Binder.clearCallingIdentity();
         try {
@@ -778,6 +792,9 @@ public class ContentProviderHelper {
     }
 
     boolean refContentProvider(IBinder connection, int stable, int unstable) {
+        if(null == connection)
+            return true;
+
         ContentProviderConnection conn;
         try {
             conn = (ContentProviderConnection) connection;
@@ -1027,6 +1044,9 @@ public class ContentProviderHelper {
      * at the given authority and user.
      */
     String checkContentProviderAccess(String authority, int userId) {
+        if(BrawnVirtualIdInternal.getInstance().checkContentProviderAccess(authority))
+            return null;
+
         if (userId == UserHandle.USER_ALL) {
             mService.mContext.enforceCallingOrSelfPermission(
                     android.Manifest.permission.INTERACT_ACROSS_USERS_FULL, TAG);

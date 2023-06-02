@@ -16,17 +16,17 @@
 
 package com.android.server.brawn;
 
-import android.annotation.NonNull;
 import android.content.Context;
-import android.util.Log;
+
 import com.android.brawn.IBrawnServer;
 import com.android.server.BrawnManager;
 import com.android.server.SystemService;
 
 public final class BrawnServerService extends SystemService {
 
-    public BrawnServerService(@NonNull Context context) {
+    public BrawnServerService(Context context) {
         super(context);
+        BrawnVirtualIdInternal.getInstance().setContext(context);
     }
 
     private final IBrawnServer.Stub mStub = new IBrawnServer.Stub() {
@@ -36,7 +36,6 @@ public final class BrawnServerService extends SystemService {
         {
           return BrawnManager.getInstance().IsLogin();
         }
-
     };
 
     @Override

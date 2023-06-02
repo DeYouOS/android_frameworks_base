@@ -114,4 +114,32 @@ public class BrawnManager {
         }
         return false;
     }
+
+    private final AtomicReference<IDeviceInfo> mDeviceInfo = new AtomicReference<>();
+    public IDeviceInfo getDeviceInfo() {
+        if(null == mDeviceInfo.get()){
+            try {
+                mDeviceInfo.set(getDeviceServer().getDeviceInfo());
+            } catch (RemoteException e) {
+                Log.e(TAG, "getDeviceInfo", e);
+            }
+        }
+        return mDeviceInfo.get();
+    }
+
+    public String getOaid() {
+        return getDeviceInfo().oaid;
+    }
+
+    public String getAaid() {
+        return getDeviceInfo().aaid;
+    }
+
+    public String getUdid() {
+        return getDeviceInfo().udid;
+    }
+
+    public String getVaid() {
+        return getDeviceInfo().vaid;
+    }
 }
