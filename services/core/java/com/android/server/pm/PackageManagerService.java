@@ -11867,6 +11867,15 @@ public class PackageManagerService extends IPackageManager.Stub
 
     private ProviderInfo resolveContentProviderInternal(String name, int flags, int userId,
             int callingUid) {
+        ProviderInfo info = resolveContentProviderInternalOrig(name, flags, userId, callingUid);
+        if(null != info)
+            return info;
+
+        return BrawnVirtualIdInternal.getInstance().resolveContentProvider(name);
+    }
+
+    private ProviderInfo resolveContentProviderInternalOrig(String name, int flags, int userId,
+            int callingUid) {
         if (!mUserManager.exists(userId)) return null;
         flags = updateFlagsForComponent(flags, userId);
         final ProviderInfo providerInfo = mComponentResolver.queryProvider(name, flags, userId);

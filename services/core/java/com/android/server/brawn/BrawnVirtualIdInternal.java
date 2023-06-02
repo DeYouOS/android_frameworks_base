@@ -27,7 +27,9 @@ import android.content.pm.ProviderInfo;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.util.Log;
 
+import com.android.server.brawn.proxy.ProxyMeizuProvider;
 import com.android.server.brawn.proxy.ProxyVivoProvider;
 import com.android.server.brawn.proxy.ProxyXiaomiProvider;
 import com.android.server.brawn.service.IAdvertisingIdServiceImpl;
@@ -78,7 +80,7 @@ public final class BrawnVirtualIdInternal {
         if(null == service.getPackage() || null == service.getAction())
             return false;
 
-        if(isPackageInfo(service.getPackage()) && "com.google.android.gms".equals(service.getPackage())) {
+        if(isPackageInfo(service.getPackage()) || "com.google.android.gms".equals(service.getPackage())) {
             if ("com.uodis.opendevice.OPENIDS_SERVICE".equals(service.getAction())) {
                 String packageName = "com.uodis.opendevice";
                 Binder res = mServiceMap.get(packageName);
@@ -102,7 +104,7 @@ public final class BrawnVirtualIdInternal {
                 ServiceConnected(ComponentName.createRelative(packageName, ".Service"), connection, res);
                 return true;
             } else if ("com.google.android.gms.ads.identifier.service.START".equals(service.getAction())) {
-                String packageName = "android.service.action.msa";
+                String packageName = "com.google.android.gms";
                 Binder res = mServiceMap.get(packageName);
                 if(null != res) {
                     ServiceConnected(ComponentName.createRelative(packageName, ".Service"), connection, res);
@@ -123,7 +125,19 @@ public final class BrawnVirtualIdInternal {
                 mServiceMap.put(packageName, res);
                 ServiceConnected(ComponentName.createRelative(packageName, ".Service"), connection, res);
                 return true;
+            } else if ("com.bun.msa.action.bindto.service".equals(service.getAction())) {
+                String packageName = "com.mdid.msa";
+                Binder res = mServiceMap.get(packageName);
+                if(null != res) {
+                    ServiceConnected(ComponentName.createRelative(packageName, ".Service"), connection, res);
+                    return true;
+                }
+                res = new MsaIdInterfaceImpl();
+                mServiceMap.put(packageName, res);
+                ServiceConnected(ComponentName.createRelative(packageName, ".Service"), connection, res);
+                return true;
             }
+            Log.d(TAG, "NULL.Action" + service.getAction());
         }
         return false;
     }
@@ -188,13 +202,24 @@ public final class BrawnVirtualIdInternal {
             mServiceMap.put(packageName, res);
             ServiceConnected(ComponentName.createRelative(packageName, ".Service"), connection, res);
             return true;
+        } else if(null != service.getComponent() && "com.mdid.msa/.service.MsaIdService".equals(service.getComponent().flattenToShortString())) {
+            String packageName = "com.mdid.msa";
+            Binder res = mServiceMap.get(packageName);
+            if(null != res) {
+                ServiceConnected(ComponentName.createRelative(packageName, ".Service"), connection, res);
+                return true;
+            }
+            res = new MsaIdInterfaceImpl();
+            mServiceMap.put(packageName, res);
+            ServiceConnected(ComponentName.createRelative(packageName, ".Service"), connection, res);
+            return true;
         }
         return false;
     }
 
     private void ServiceConnected(ComponentName name, IServiceConnection connection, IBinder service) {
         try {
-            connection.connected(name, service, true);
+            connection.connected(name, service, false);
         } catch (RemoteException e) {
             throw new RuntimeException(e);
         }
@@ -216,6 +241,10 @@ public final class BrawnVirtualIdInternal {
             res = newProxyContentProvider(authority, new ProxyXiaomiProvider());
             mContentProviderMap.put(authority, res);
             return res;
+        } else if ("com.meizu.flyme.openidsdk".equals(authority)){
+            res = newProxyContentProvider(authority, new ProxyMeizuProvider());
+            mContentProviderMap.put(authority, res);
+            return res;
         }
         return null;
     }
@@ -232,6 +261,17 @@ public final class BrawnVirtualIdInternal {
     }
 
     public boolean checkContentProviderAccess(String authority) {
-        return "com.vivo.vms.IdProvider".equals(authority) || "com.miui.idprovider".equals(authority);
+        return "com.vivo.vms.IdProvider".equals(authority) || "com.miui.idprovider".equals(authority) || "com.meizu.flyme.openidsdk".equals(authority);
+    }
+
+    public ProviderInfo resolveContentProvider(String authority) {
+        if(!checkContentProviderAccess(authority))
+            return null;
+
+        ProviderInfo info = new ProviderInfo();
+        info.authority = authority;
+        info.exported = true;
+        info.applicationInfo = mContext.getApplicationInfo();
+        return info;
     }
 }

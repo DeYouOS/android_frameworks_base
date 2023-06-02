@@ -45,6 +45,6 @@ public class ProxyVivoProvider extends BaseProxyProvider {
         if(uri.getPath().contains("UDID"))
             return retUniform_id(uri, "UDID", BrawnManager.getInstance().getUdid());
 
-        return null;
+        return retUniform_id(uri, "OAID", BrawnManager.getInstance().getOaid());
     }
 }

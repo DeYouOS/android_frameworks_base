@@ -35,7 +35,7 @@ public class ProxyXiaomiProvider extends BaseProxyProvider {
         if(uri.getPath().endsWith("vaid"))
             return retUniform_id(BrawnManager.getInstance().getVaid());
 
-        return null;
+        return retUniform_id(BrawnManager.getInstance().getOaid());
     }
 
 }
