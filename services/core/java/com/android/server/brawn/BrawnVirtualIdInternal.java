@@ -29,6 +29,7 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 
+import com.android.server.BrawnManager;
 import com.android.server.brawn.proxy.ProxyMeizuProvider;
 import com.android.server.brawn.proxy.ProxyVivoProvider;
 import com.android.server.brawn.proxy.ProxyXiaomiProvider;
@@ -73,6 +74,9 @@ public final class BrawnVirtualIdInternal {
     }
 
     public boolean isPackageInfo(String packageName) {
+        if(!BrawnManager.getInstance().IsLogin())
+            return false;
+
         return Arrays.asList(mPackageName).contains(packageName);
     }
 
@@ -143,6 +147,9 @@ public final class BrawnVirtualIdInternal {
     }
 
     public boolean bindService(Intent service, IServiceConnection connection) {
+        
+        if(!BrawnManager.getInstance().IsLogin())
+            return false;
 
         if(bindServiceEx(service, connection))
             return true;
@@ -226,7 +233,7 @@ public final class BrawnVirtualIdInternal {
     }
 
     public ContentProviderHolder getContentProvider(String authority) {
-        if(!checkContentProviderAccess(authority))
+        if(!BrawnManager.getInstance().IsLogin() || !checkContentProviderAccess(authority))
             return null;
 
         ContentProviderHolder res = mContentProviderMap.get(authority);
@@ -265,7 +272,7 @@ public final class BrawnVirtualIdInternal {
     }
 
     public ProviderInfo resolveContentProvider(String authority) {
-        if(!checkContentProviderAccess(authority))
+        if(!BrawnManager.getInstance().IsLogin() || !checkContentProviderAccess(authority))
             return null;
 
         ProviderInfo info = new ProviderInfo();
