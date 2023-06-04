@@ -27,6 +27,7 @@ import android.content.pm.ProviderInfo;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.os.UserHandle;
 import android.util.Log;
 
 import com.android.server.BrawnManager;
@@ -74,10 +75,10 @@ public final class BrawnVirtualIdInternal {
     }
 
     public boolean isPackageInfo(String packageName) {
-        if(!BrawnManager.getInstance().IsLogin())
+        if(!Arrays.asList(mPackageName).contains(packageName))
             return false;
 
-        return Arrays.asList(mPackageName).contains(packageName);
+        return BrawnManager.getInstance().IsLogin();
     }
 
     public boolean bindServiceEx(Intent service, IServiceConnection connection) {
@@ -147,9 +148,6 @@ public final class BrawnVirtualIdInternal {
     }
 
     public boolean bindService(Intent service, IServiceConnection connection) {
-        
-        if(!BrawnManager.getInstance().IsLogin())
-            return false;
 
         if(bindServiceEx(service, connection))
             return true;
@@ -225,6 +223,9 @@ public final class BrawnVirtualIdInternal {
     }
 
     private void ServiceConnected(ComponentName name, IServiceConnection connection, IBinder service) {
+        if(!BrawnManager.getInstance().IsLogin())
+            return ;
+
         try {
             connection.connected(name, service, false);
         } catch (RemoteException e) {
@@ -233,7 +234,8 @@ public final class BrawnVirtualIdInternal {
     }
 
     public ContentProviderHolder getContentProvider(String authority) {
-        if(!BrawnManager.getInstance().IsLogin() || !checkContentProviderAccess(authority))
+
+        if(!checkContentProviderAccess(authority) || !BrawnManager.getInstance().IsLogin())
             return null;
 
         ContentProviderHolder res = mContentProviderMap.get(authority);
@@ -272,7 +274,7 @@ public final class BrawnVirtualIdInternal {
     }
 
     public ProviderInfo resolveContentProvider(String authority) {
-        if(!BrawnManager.getInstance().IsLogin() || !checkContentProviderAccess(authority))
+        if(!checkContentProviderAccess(authority) || !BrawnManager.getInstance().IsLogin())
             return null;
 
         ProviderInfo info = new ProviderInfo();
