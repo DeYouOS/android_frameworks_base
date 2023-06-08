@@ -320,4 +320,8 @@
 
     <!-- Whether vibrate icon is shown in the status bar by default. -->
     <integer name="def_statusBarVibrateIconEnabled">0</integer>
+
+    <!-- Default for Settings.Secure.ENABLED_INPUT_METHODS  -->
+    <string name="def_input_method">com.sohu.inputmethod.sogou/.SogouIME</string>
+
 </resources>
