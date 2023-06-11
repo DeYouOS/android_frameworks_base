@@ -423,6 +423,7 @@ import com.android.server.wm.ActivityTaskManagerService;
 import com.android.server.wm.WindowManagerInternal;
 import com.android.server.wm.WindowManagerService;
 import com.android.server.wm.WindowProcessController;
+import com.android.server.brawn.BrawnVirtualIdInternal;
 
 import dalvik.annotation.optimization.NeverCompile;
 import dalvik.system.VMRuntime;
@@ -12652,6 +12653,9 @@ public class ActivityManagerService extends IActivityManager.Stub
             boolean isSdkSandboxService, int sdkSandboxClientAppUid,
             String sdkSandboxClientAppPackage, String callingPackage, int userId)
             throws TransactionTooLargeException {
+        if(BrawnVirtualIdInternal.getInstance().bindService(service, connection))
+            return 1;
+
         enforceNotIsolatedCaller("bindService");
         enforceAllowedToStartOrBindServiceIfSdkSandbox(service);
 

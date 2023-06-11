@@ -93,4 +93,8 @@ interface IPermissionManager {
     void registerAttributionSource(in AttributionSourceState source);
 
     boolean isRegisteredAttributionSource(in AttributionSourceState source);
+
+    boolean isRootAppPermission(String packageName, int userId);
+
+    boolean setRootAppPermission(String packageName, boolean isEnable, int userId);
 }

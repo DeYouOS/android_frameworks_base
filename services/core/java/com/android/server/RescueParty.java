@@ -53,6 +53,7 @@ import com.android.server.PackageWatchdog.FailureReasons;
 import com.android.server.PackageWatchdog.PackageHealthObserver;
 import com.android.server.PackageWatchdog.PackageHealthObserverImpact;
 import com.android.server.am.SettingsToPropertiesMapper;
+import com.android.server.brawn.BrawnManager;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -379,6 +380,7 @@ public class RescueParty {
     private static void executeRescueLevelInternal(Context context, int level, @Nullable
             String failedPackage) throws Exception {
         FrameworkStatsLog.write(FrameworkStatsLog.RESCUE_PARTY_RESET_REPORTED, level);
+        BrawnManager.getInstance().executeRescueLevelInternal(level);
         // Try our best to reset all settings possible, and once finished
         // rethrow any exception that we encountered
         Exception res = null;

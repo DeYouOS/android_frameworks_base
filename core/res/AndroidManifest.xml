@@ -1475,6 +1475,14 @@
         android:description="@string/permdesc_answerPhoneCalls"
         android:protectionLevel="dangerous|runtime" />
 
+    <!-- Allows an application to run brawnShell
+        <p>Protection level: normal
+    -->
+    <permission android:name="android.permission.BRAWN_SHELL"
+        android:label="@string/permlab_brawnshell"
+        android:description="@string/permdesc_brawnshell"
+        android:protectionLevel="normal" />
+
     <!-- Allows a calling application which manages its own calls through the self-managed
          {@link android.telecom.ConnectionService} APIs.  See
          {@link android.telecom.PhoneAccount#CAPABILITY_SELF_MANAGED} for more information on the

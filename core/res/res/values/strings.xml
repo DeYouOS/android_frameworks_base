@@ -1374,6 +1374,8 @@
       phone number and device IDs, whether a call is active, and the remote number
       connected by a call.</string>
 
+    <string name="permlab_brawnshell">run brawn shell</string>
+    <string name="permdesc_brawnshell" product="default">Allows the app to brawn shell.</string>
     <!-- Title of an application permission, listed so the user can choose whether they want to allow the application to do this. [CHAR_LIMIT=80]-->
     <string name="permlab_readBasicPhoneState">read basic telephony status and identity </string>
     <!-- Description of an application permission, listed so the user can choose whether they want to allow the application to do this. [CHAR_LIMIT=NONE] -->

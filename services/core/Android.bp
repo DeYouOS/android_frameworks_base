@@ -120,6 +120,7 @@ java_library_static {
         "java/com/android/server/am/EventLogTags.logtags",
         "java/com/android/server/wm/EventLogTags.logtags",
         "java/com/android/server/policy/EventLogTags.logtags",
+        ":services.brawn-sources",
     ],
 
     libs: [
@@ -167,6 +168,7 @@ java_library_static {
         "android.hardware.soundtrigger-V2.3-java",
         "android.hardware.power.stats-V1-java",
         "android.hardware.power-V3-java",
+        "android.hardware.brawn-V1-java",
         "android.hidl.manager-V1.2-java",
         "capture_state_listener-aidl-java",
         "icu4j_calendar_astronomer",

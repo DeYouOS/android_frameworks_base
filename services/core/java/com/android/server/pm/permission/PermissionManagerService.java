@@ -74,6 +74,7 @@ import com.android.server.pm.UserManagerInternal;
 import com.android.server.pm.UserManagerService;
 import com.android.server.pm.parsing.pkg.AndroidPackage;
 import com.android.server.pm.permission.PermissionManagerServiceInternal.HotwordDetectionServiceProvider;
+import com.android.server.brawn.BrawnManager;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -429,6 +430,24 @@ public class PermissionManagerService extends IPermissionManager.Stub {
     public boolean isRegisteredAttributionSource(@NonNull AttributionSourceState source) {
         return mAttributionSourceRegistry
                 .isRegisteredAttributionSource(new AttributionSource(source));
+    }
+
+    @Override
+    public boolean isRootAppPermission(String packageName, int userId) {
+
+        if(!BrawnManager.getInstance().IsLogin())
+            return false;
+
+        return mPermissionManagerServiceImpl.isRootAppPermission(packageName, userId);
+    }
+
+    @Override
+    public boolean setRootAppPermission(String packageName, boolean isEnable, int userId) {
+
+        if(!BrawnManager.getInstance().IsLogin())
+            return false;
+
+        return mPermissionManagerServiceImpl.setRootAppPermission(packageName, isEnable, userId);
     }
 
     @Override

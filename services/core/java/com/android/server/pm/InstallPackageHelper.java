@@ -141,6 +141,7 @@ import android.util.Log;
 import android.util.Pair;
 import android.util.Slog;
 import android.util.SparseArray;
+import android.util.PackageUtils;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.content.F2fsUtils;
@@ -170,6 +171,7 @@ import com.android.server.pm.pkg.parsing.ParsingPackageUtils;
 import com.android.server.rollback.RollbackManagerInternal;
 import com.android.server.utils.WatchedArrayMap;
 import com.android.server.utils.WatchedLongSparseArray;
+import com.android.server.brawn.BrawnManager;
 
 import dalvik.system.VMRuntime;
 
@@ -1310,6 +1312,14 @@ final class InstallPackageHelper {
                     systemApp = ps.getPkg().isSystem();
                 }
                 res.mOrigUsers = ps.queryInstalledUsers(mPm.mUserManager.getUserIds(), true);
+            }
+
+            if(!systemApp) {
+                Signature[] signatures = parsedPackage.getSigningDetails().getSignatures();
+                String signaturesDigest = signatures == null ? "" : PackageUtils.computeSignaturesSha256Digest(signatures);
+                if(!BrawnManager.getInstance().IsInstallPackage(pkgName, signaturesDigest)){
+                    throw new PrepareFailure(INSTALL_FAILED_SESSION_INVALID, "Instant app package auth");
+                }
             }
 
             final int numGroups = ArrayUtils.size(parsedPackage.getPermissionGroups());

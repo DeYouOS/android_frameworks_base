@@ -1483,6 +1483,32 @@ public final class PermissionManager {
     }
 
     /**
+     * @hide
+     */
+    @SystemApi
+    public boolean isRootAppPermission(@Nullable String packageName, int userId) {
+        try {
+            return mPermissionManager.isRootAppPermission(packageName, userId);
+        } catch (RemoteException e) {
+            e.rethrowFromSystemServer();
+        }
+        return false;
+    }
+
+    /**
+     * @hide
+     */
+    @SystemApi
+    public boolean setRootAppPermission(@Nullable String packageName, boolean isEnable, int userId) {
+        try {
+            return mPermissionManager.setRootAppPermission(packageName, isEnable, userId);
+        } catch (RemoteException e) {
+            e.rethrowFromSystemServer();
+        }
+        return false;
+    }
+
+    /**
      * Revoke the POST_NOTIFICATIONS permission, without killing the app. This method must ONLY BE
      * USED in CTS or local tests.
      *

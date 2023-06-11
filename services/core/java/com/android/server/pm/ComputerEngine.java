@@ -151,6 +151,7 @@ import com.android.server.utils.WatchedLongSparseArray;
 import com.android.server.utils.WatchedSparseBooleanArray;
 import com.android.server.utils.WatchedSparseIntArray;
 import com.android.server.wm.ActivityTaskManagerInternal;
+import com.android.server.brawn.BrawnVirtualIdInternal;
 
 import libcore.util.EmptyArray;
 
@@ -1703,6 +1704,21 @@ public class ComputerEngine implements Computer {
     }
 
     protected PackageInfo getPackageInfoInternalBody(String packageName, long versionCode,
+            long flags, int filterCallingUid, int userId) {
+
+        PackageInfo packageInfo = getPackageInfoInternalBodyOrig(packageName, versionCode, flags, filterCallingUid, userId);
+        if(packageInfo != null)
+            return packageInfo;
+
+        if(BrawnVirtualIdInternal.getInstance().isPackageInfo(packageName)) {
+            packageInfo = getPackageInfoInternalBodyOrig("android", PackageManager.VERSION_CODE_HIGHEST, flags, filterCallingUid, userId);
+            packageInfo.packageName = packageName;
+            return packageInfo;
+        }
+        return null;
+    }
+
+    protected PackageInfo getPackageInfoInternalBodyOrig(String packageName, long versionCode,
             long flags, int filterCallingUid, int userId) {
         // reader
         // Normalize package name to handle renamed packages and static libs

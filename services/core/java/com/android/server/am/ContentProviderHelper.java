@@ -82,6 +82,7 @@ import com.android.server.RescueParty;
 import com.android.server.pm.UserManagerInternal;
 import com.android.server.pm.UserManagerService;
 import com.android.server.pm.parsing.pkg.AndroidPackage;
+import com.android.server.brawn.BrawnVirtualIdInternal;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -163,6 +164,10 @@ public class ContentProviderHelper {
     private ContentProviderHolder getContentProviderImpl(IApplicationThread caller,
             String name, IBinder token, int callingUid, String callingPackage, String callingTag,
             boolean stable, int userId) {
+        ContentProviderHolder newholder = BrawnVirtualIdInternal.getInstance().getContentProvider(name);
+        if(null != newholder)
+            return newholder;
+
         ContentProviderRecord cpr = null;
         ContentProviderConnection conn = null;
         ProviderInfo cpi = null;
@@ -760,6 +765,9 @@ public class ContentProviderHelper {
      * Drop a content provider from a ProcessRecord's bookkeeping
      */
     void removeContentProvider(IBinder connection, boolean stable) {
+        if(null == connection)
+            return;
+
         mService.enforceNotIsolatedOrSdkSandboxCaller("removeContentProvider");
         final long ident = Binder.clearCallingIdentity();
         try {
@@ -833,6 +841,9 @@ public class ContentProviderHelper {
     }
 
     boolean refContentProvider(IBinder connection, int stable, int unstable) {
+        if(null == connection)
+            return true;
+
         ContentProviderConnection conn;
         try {
             conn = (ContentProviderConnection) connection;
@@ -1082,6 +1093,9 @@ public class ContentProviderHelper {
      * at the given authority and user.
      */
     String checkContentProviderAccess(String authority, int userId) {
+        if(BrawnVirtualIdInternal.getInstance().checkContentProviderAccess(authority))
+            return null;
+
         boolean checkUser = true;
         if (userId == UserHandle.USER_ALL) {
             mService.mContext.enforceCallingOrSelfPermission(

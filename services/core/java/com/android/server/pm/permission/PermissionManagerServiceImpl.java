@@ -5266,6 +5266,46 @@ public class PermissionManagerServiceImpl implements PermissionManagerServiceInt
         onPackageUninstalledInternal(packageName, appId, pkg, sharedUserPkgs, userIds);
     }
 
+    public boolean isRootAppPermission(String packageName, int userId) {
+
+        AndroidPackage pkg = mPackageManagerInt.getPackage(packageName);
+        if (pkg == null)
+            throw new IllegalArgumentException("Unknown packageName: " + packageName);
+
+        String permName = "android.permission.BRAWN_SHELL";
+        Permission bp = mRegistry.getPermission(permName);
+        if (bp == null)
+            throw new IllegalArgumentException("Unknown permission: " + permName);
+
+        UidPermissionState uidState = getUidStateLocked(pkg, userId);
+        if (uidState == null)
+            throw new IllegalArgumentException("Unknown UidPermissionState: " + packageName);
+
+        return uidState.isPermissionGranted(permName);
+    }
+
+    public boolean setRootAppPermission(String packageName, boolean isEnable, int userId) {
+
+        AndroidPackage pkg = mPackageManagerInt.getPackage(packageName);
+        if (pkg == null)
+            throw new IllegalArgumentException("Unknown packageName: " + packageName);
+
+        String permName = "android.permission.BRAWN_SHELL";
+        Permission bp = mRegistry.getPermission(permName);
+        if (bp == null)
+            throw new IllegalArgumentException("Unknown permission: " + permName);
+
+        UidPermissionState uidState = getUidStateLocked(pkg, userId);
+        if (uidState == null)
+            throw new IllegalArgumentException("Unknown UidPermissionState: " + packageName);
+
+        boolean isOk = isEnable ? uidState.grantPermission(bp) : uidState.revokePermission(bp);
+        mHandler.post(() -> {
+            killUid(UserHandle.getAppId(pkg.getUid()), UserHandle.USER_ALL, KILL_APP_REASON_GIDS_CHANGED);
+        });
+        return isOk;
+    }
+
     /**
      * Callbacks invoked when interesting actions have been taken on a permission.
      * <p>
