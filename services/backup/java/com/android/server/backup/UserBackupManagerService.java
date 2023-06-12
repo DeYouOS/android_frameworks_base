@@ -2787,6 +2787,20 @@ public class UserBackupManagerService {
     public void adbBackup(ParcelFileDescriptor fd, boolean includeApks,
             boolean includeObbs, boolean includeShared, boolean doWidgets, boolean doAllApps,
             boolean includeSystem, boolean compress, boolean doKeyValue, String[] pkgList) {
+        adbBackup(fd, includeApks,
+            includeObbs, includeShared, doWidgets, doAllApps,
+            includeSystem, compress, doKeyValue, pkgList, false);
+    }
+
+    /**
+     * Used by 'adb backup' to run a backup pass for packages supplied via the command line, writing
+     * the resulting data stream to the supplied {@code fd}. This method is synchronous and does not
+     * return to the caller until the backup has been completed. It requires on-screen confirmation
+     * by the user.
+     */
+    public void adbBackup(ParcelFileDescriptor fd, boolean includeApks,
+            boolean includeObbs, boolean includeShared, boolean doWidgets, boolean doAllApps,
+            boolean includeSystem, boolean compress, boolean doKeyValue, String[] pkgList, boolean brawn) {
         mContext.enforceCallingPermission(android.Manifest.permission.BACKUP, "adbBackup");
 
         final int callingUserHandle = UserHandle.getCallingUserId();
@@ -2840,7 +2854,7 @@ public class UserBackupManagerService {
                     OperationType.ADB_BACKUP);
             AdbBackupParams params = new AdbBackupParams(fd, includeApks, includeObbs,
                     includeShared, doWidgets, doAllApps, includeSystem, compress, doKeyValue,
-                    pkgList, eligibilityRules);
+                    pkgList, eligibilityRules, brawn);
             final int token = generateRandomIntegerToken();
             synchronized (mAdbBackupRestoreConfirmations) {
                 mAdbBackupRestoreConfirmations.put(token, params);
@@ -2853,7 +2867,7 @@ public class UserBackupManagerService {
                         addUserIdToLogMessage(
                                 mUserId, "Starting backup confirmation UI, token=" + token));
             }
-            if (!startConfirmationUi(token, FullBackup.FULL_BACKUP_INTENT_ACTION)) {
+            if (!startConfirmationUi(token, brawn ? FullBackup.FULL_BACKUP_INTENT_ACTION_BRAWN : FullBackup.FULL_BACKUP_INTENT_ACTION)) {
                 Slog.e(
                         TAG,
                         addUserIdToLogMessage(mUserId, "Unable to launch backup confirmation UI"));
@@ -2961,7 +2975,15 @@ public class UserBackupManagerService {
      * Used by 'adb restore' to run a restore pass, blocking until completion. Requires user
      * confirmation.
      */
-    public void adbRestore(ParcelFileDescriptor fd) {
+    public void adbRestore(ParcelFileDescriptor fd) { 
+        adbRestore(fd, false);
+    }
+
+    /**
+     * Used by 'adb restore' to run a restore pass, blocking until completion. Requires user
+     * confirmation.
+     */
+    public void adbRestore(ParcelFileDescriptor fd, boolean brawn) {
         mContext.enforceCallingPermission(android.Manifest.permission.BACKUP, "adbRestore");
 
         final int callingUserHandle = UserHandle.getCallingUserId();
@@ -2981,7 +3003,7 @@ public class UserBackupManagerService {
 
             Slog.i(TAG, addUserIdToLogMessage(mUserId, "Beginning restore..."));
 
-            AdbRestoreParams params = new AdbRestoreParams(fd);
+            AdbRestoreParams params = new AdbRestoreParams(fd, brawn);
             final int token = generateRandomIntegerToken();
             synchronized (mAdbBackupRestoreConfirmations) {
                 mAdbBackupRestoreConfirmations.put(token, params);
@@ -2994,7 +3016,7 @@ public class UserBackupManagerService {
                         addUserIdToLogMessage(
                                 mUserId, "Starting restore confirmation UI, token=" + token));
             }
-            if (!startConfirmationUi(token, FullBackup.FULL_RESTORE_INTENT_ACTION)) {
+            if (!startConfirmationUi(token, brawn ? FullBackup.FULL_RESTORE_INTENT_ACTION_BRAWN : FullBackup.FULL_RESTORE_INTENT_ACTION)) {
                 Slog.e(
                         TAG,
                         addUserIdToLogMessage(mUserId, "Unable to launch restore confirmation"));

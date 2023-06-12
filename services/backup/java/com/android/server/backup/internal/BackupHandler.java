@@ -289,7 +289,7 @@ public class BackupHandler extends Handler {
                         params.includeShared, params.doWidgets, params.curPassword,
                         params.encryptPassword, params.allApps, params.includeSystem,
                         params.doCompress, params.includeKeyValue, params.packages, params.latch,
-                        params.backupEligibilityRules);
+                        params.backupEligibilityRules, params.isBrawn);
                 (new Thread(task, "adb-backup")).start();
                 break;
             }

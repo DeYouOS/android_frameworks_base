@@ -37,6 +37,13 @@ public class AdbBackupParams extends AdbParams {
             boolean saveShared, boolean alsoWidgets, boolean doAllApps, boolean doSystem,
             boolean compress, boolean doKeyValue, String[] pkgList,
             BackupEligibilityRules eligibilityRules) {
+        this(output, saveApks, saveObbs, saveShared, alsoWidgets, doAllApps, doSystem, compress, doKeyValue, pkgList, eligibilityRules, false);
+    }
+
+    public AdbBackupParams(ParcelFileDescriptor output, boolean saveApks, boolean saveObbs,
+            boolean saveShared, boolean alsoWidgets, boolean doAllApps, boolean doSystem,
+            boolean compress, boolean doKeyValue, String[] pkgList,
+            BackupEligibilityRules eligibilityRules, boolean brawn) {
         fd = output;
         includeApks = saveApks;
         includeObbs = saveObbs;
@@ -48,5 +55,6 @@ public class AdbBackupParams extends AdbParams {
         includeKeyValue = doKeyValue;
         packages = pkgList;
         backupEligibilityRules = eligibilityRules;
+        isBrawn = brawn;
     }
 }

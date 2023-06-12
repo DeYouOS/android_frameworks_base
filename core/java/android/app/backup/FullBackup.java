@@ -94,6 +94,8 @@ public class FullBackup {
 
     public static final String FULL_BACKUP_INTENT_ACTION = "fullback";
     public static final String FULL_RESTORE_INTENT_ACTION = "fullrest";
+    public static final String FULL_BACKUP_INTENT_ACTION_BRAWN = "fullback_brawn";
+    public static final String FULL_RESTORE_INTENT_ACTION_BRAWN = "fullrest_brawn";
     public static final String CONF_TOKEN_INTENT_EXTRA = "conftoken";
 
     public static final String FLAG_REQUIRED_CLIENT_SIDE_ENCRYPTION = "clientSideEncryption";

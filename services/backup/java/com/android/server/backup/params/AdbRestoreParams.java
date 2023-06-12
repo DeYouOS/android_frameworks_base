@@ -21,6 +21,11 @@ import android.os.ParcelFileDescriptor;
 public class AdbRestoreParams extends AdbParams {
 
     public AdbRestoreParams(ParcelFileDescriptor input) {
+        this(input, false);
+    }
+
+    public AdbRestoreParams(ParcelFileDescriptor input, boolean brawn) {
         fd = input;
+        isBrawn = brawn;
     }
 }

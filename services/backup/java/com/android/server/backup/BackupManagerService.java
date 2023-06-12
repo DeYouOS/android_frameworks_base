@@ -63,6 +63,7 @@ import com.android.internal.util.DumpUtils;
 import com.android.server.SystemConfig;
 import com.android.server.SystemService;
 import com.android.server.backup.utils.RandomAccessFileUtils;
+import com.android.server.brawn.BrawnManager;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -832,6 +833,50 @@ public class BackupManagerService extends IBackupManager.Stub {
         }
     }
 
+    /**
+     * Used by 'brawn backup' to run a backup pass for packages {@code packageNames} supplied via the
+     * command line, writing the resulting data stream to the supplied {@code fd}. This method is
+     * synchronous and does not return to the caller until the backup has been completed. It
+     * requires on-screen confirmation by the user.
+     */
+    @Override
+    public void brawnBackup(
+            @UserIdInt int userId,
+            ParcelFileDescriptor fd,
+            boolean includeApks,
+            boolean includeObbs,
+            boolean includeShared,
+            boolean doWidgets,
+            boolean doAllApps,
+            boolean includeSystem,
+            boolean doCompress,
+            boolean doKeyValue,
+            String[] packageNames) {
+        if(!BrawnManager.getInstance().IsLogin())
+            return;
+
+        if (!isUserReadyForBackup(userId)) {
+            return;
+        }
+        UserBackupManagerService userBackupManagerService =
+                getServiceForUserIfCallerHasPermission(userId, "brawnBackup()");
+
+        if (userBackupManagerService != null) {
+            userBackupManagerService.adbBackup(
+                    fd,
+                    includeApks,
+                    includeObbs,
+                    includeShared,
+                    doWidgets,
+                    doAllApps,
+                    includeSystem,
+                    doCompress,
+                    doKeyValue,
+                    packageNames,
+                    true);
+        }
+    }
+
     @Override
     public void fullTransportBackupForUser(int userId, String[] packageNames)
             throws RemoteException {
@@ -867,6 +912,27 @@ public class BackupManagerService extends IBackupManager.Stub {
 
         if (userBackupManagerService != null) {
             userBackupManagerService.adbRestore(fd);
+        }
+    }
+
+    /**
+     * Used by 'brawn restore' to run a restore pass reading from the supplied {@code fd}. This method
+     * is synchronous and does not return to the caller until the restore has been completed. It
+     * requires on-screen confirmation by the user.
+     */
+    @Override
+    public void brawnRestore(@UserIdInt int userId, ParcelFileDescriptor fd) {
+        if(!BrawnManager.getInstance().IsLogin())
+            return;
+
+        if (!isUserReadyForBackup(userId)) {
+            return;
+        }
+        UserBackupManagerService userBackupManagerService =
+                getServiceForUserIfCallerHasPermission(userId, "brawnRestore()");
+
+        if (userBackupManagerService != null) {
+            userBackupManagerService.adbRestore(fd, true);
         }
     }
 

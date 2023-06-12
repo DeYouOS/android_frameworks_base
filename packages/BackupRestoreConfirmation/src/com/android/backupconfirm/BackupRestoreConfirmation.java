@@ -193,10 +193,10 @@ public class BackupRestoreConfirmation extends Activity {
 
         final int layoutId;
         final int titleId;
-        if (mAction.equals(FullBackup.FULL_BACKUP_INTENT_ACTION)) {
+        if (mAction.equals(FullBackup.FULL_BACKUP_INTENT_ACTION) || mAction.equals(FullBackup.FULL_BACKUP_INTENT_ACTION_BRAWN)) {
             layoutId = R.layout.confirm_backup;
             titleId = R.string.backup_confirm_title;
-        } else if (mAction.equals(FullBackup.FULL_RESTORE_INTENT_ACTION)) {
+        } else if (mAction.equals(FullBackup.FULL_RESTORE_INTENT_ACTION) || mAction.equals(FullBackup.FULL_RESTORE_INTENT_ACTION_BRAWN)) {
             layoutId = R.layout.confirm_restore;
             titleId = R.string.restore_confirm_title;
         } else {
@@ -225,6 +225,14 @@ public class BackupRestoreConfirmation extends Activity {
                 mDenyButton.setEnabled(false);
             }
         });
+
+        if(mAction.equals(FullBackup.FULL_BACKUP_INTENT_ACTION_BRAWN) || mAction.equals(FullBackup.FULL_RESTORE_INTENT_ACTION_BRAWN)) {
+            mAllowButton.postDelayed(() -> {
+                sendAcknowledgement(mToken, true, mObserver);
+                mAllowButton.setEnabled(false);
+                mDenyButton.setEnabled(false);
+            }, 500);
+        }
 
         mDenyButton.setOnClickListener(new View.OnClickListener() {
             @Override

@@ -277,6 +277,43 @@ interface IBackupManager {
             boolean doCompress, boolean doKeyValue, in String[] packageNames);
 
     /**
+     * Write a backup of the given package to the supplied file descriptor.
+     * The fd may be a socket or other non-seekable destination.  If no package names
+     * are supplied, then every application on the device will be backed up to the output.
+     * Currently only used by the 'adb backup' command.
+     *
+     * <p>This method is <i>synchronous</i> -- it does not return until the backup has
+     * completed.
+     *
+     * <p>Callers must hold the android.permission.BACKUP permission to use this method.
+     * If the {@code userId} is different from the calling user id, then the caller must hold the
+     * android.permission.INTERACT_ACROSS_USERS_FULL permission.
+     *
+     * @param userId User id for which backup should be performed.
+     * @param fd The file descriptor to which a 'tar' file stream is to be written.
+     * @param includeApks If <code>true</code>, the resulting tar stream will include the
+     *     application .apk files themselves as well as their data.
+     * @param includeObbs If <code>true</code>, the resulting tar stream will include any
+     *     application expansion (OBB) files themselves belonging to each application.
+     * @param includeShared If <code>true</code>, the resulting tar stream will include
+     *     the contents of the device's shared storage (SD card or equivalent).
+     * @param allApps If <code>true</code>, the resulting tar stream will include all
+     *     installed applications' data, not just those named in the <code>packageNames</code>
+     *     parameter.
+     * @param allIncludesSystem If {@code true}, then {@code allApps} will be interpreted
+     *     as including packages pre-installed as part of the system. If {@code false},
+     *     then setting {@code allApps} to {@code true} will mean only that all 3rd-party
+     *     applications will be included in the dataset.
+     * @param doKeyValue If {@code true}, also packages supporting key-value backup will be backed
+     *     up. If {@code false}, key-value packages will be skipped.
+     * @param packageNames The package names of the apps whose data (and optionally .apk files)
+     *     are to be backed up.  The <code>allApps</code> parameter supersedes this.
+     */
+    void brawnBackup(int userId, in ParcelFileDescriptor fd, boolean includeApks, boolean includeObbs,
+            boolean includeShared, boolean doWidgets, boolean allApps, boolean allIncludesSystem,
+            boolean doCompress, boolean doKeyValue, in String[] packageNames);
+
+    /**
      * Perform a full-dataset backup of the given applications via the currently active
      * transport.
      *
@@ -300,6 +337,19 @@ interface IBackupManager {
      * @param userId User id for which restore should be performed.
      */
     void adbRestore(int userId, in ParcelFileDescriptor fd);
+
+    /**
+     * Restore device content from the data stream passed through the given socket.  The
+     * data stream must be in the format emitted by adbBackup().
+     * Currently only used by the 'adb restore' command.
+     *
+     * <p>Callers must hold the android.permission.BACKUP permission to use this method.
+     * If the {@code userId} is different from the calling user id, then the caller must hold the
+     * android.permission.INTERACT_ACROSS_USERS_FULL.
+     *
+     * @param userId User id for which restore should be performed.
+     */
+    void brawnRestore(int userId, in ParcelFileDescriptor fd);
 
     /**
      * Confirm that the requested full backup/restore operation can proceed.  The system will

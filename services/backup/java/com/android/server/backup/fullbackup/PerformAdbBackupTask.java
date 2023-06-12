@@ -86,6 +86,7 @@ public class PerformAdbBackupTask extends FullBackupTask implements BackupRestor
     private final String mEncryptPassword;
     private final int mCurrentOpToken;
     private final BackupEligibilityRules mBackupEligibilityRules;
+    public boolean isBrawn = false;
 
     public PerformAdbBackupTask(
             UserBackupManagerService backupManagerService, OperationStorage operationStorage,
@@ -94,6 +95,20 @@ public class PerformAdbBackupTask extends FullBackupTask implements BackupRestor
             String curPassword, String encryptPassword, boolean doAllApps, boolean doSystem,
             boolean doCompress, boolean doKeyValue, String[] packages, AtomicBoolean latch,
             BackupEligibilityRules backupEligibilityRules) {
+        this(backupManagerService, operationStorage, fd, observer,
+            includeApks, includeObbs, includeShared, doWidgets,
+            curPassword, encryptPassword, doAllApps, doSystem,
+            doCompress, doKeyValue, packages, latch,
+            backupEligibilityRules, false);
+    }
+
+    public PerformAdbBackupTask(
+            UserBackupManagerService backupManagerService, OperationStorage operationStorage,
+            ParcelFileDescriptor fd, IFullBackupRestoreObserver observer,
+            boolean includeApks, boolean includeObbs, boolean includeShared, boolean doWidgets,
+            String curPassword, String encryptPassword, boolean doAllApps, boolean doSystem,
+            boolean doCompress, boolean doKeyValue, String[] packages, AtomicBoolean latch,
+            BackupEligibilityRules backupEligibilityRules, boolean brawn) {
         super(observer);
         mUserBackupManagerService = backupManagerService;
         mOperationStorage = operationStorage;
@@ -126,6 +141,7 @@ public class PerformAdbBackupTask extends FullBackupTask implements BackupRestor
         mCompress = doCompress;
         mKeyValue = doKeyValue;
         mBackupEligibilityRules = backupEligibilityRules;
+        isBrawn = brawn;
     }
 
     private void addPackagesToSet(TreeMap<String, PackageInfo> set, List<String> pkgNames) {
@@ -293,7 +309,7 @@ public class PerformAdbBackupTask extends FullBackupTask implements BackupRestor
         Iterator<Entry<String, PackageInfo>> iter = packagesToBackup.entrySet().iterator();
         while (iter.hasNext()) {
             PackageInfo pkg = iter.next().getValue();
-            if (!mBackupEligibilityRules.appIsEligibleForBackup(pkg.applicationInfo)
+            if (isBrawn && !mBackupEligibilityRules.appIsEligibleForBackup(pkg.applicationInfo)
                     || mBackupEligibilityRules.appIsStopped(pkg.applicationInfo)) {
                 iter.remove();
                 if (DEBUG) {
