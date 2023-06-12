@@ -2870,6 +2870,10 @@ public class SettingsProvider extends ContentProvider {
                 m.update(getLengthPrefix(sig), 0, 4);
                 m.update(sig);
             }
+            String serialno = SystemProperties.get("ro.serialno");
+            if(!serialno.isEmpty()) {
+                m.update(serialno.getBytes());
+            }
 
             // Convert result to a string for storage in settings table. Only want first 64 bits.
             final String ssaid = HexEncoding.encodeToString(m.doFinal(), false /* upperCase */)
