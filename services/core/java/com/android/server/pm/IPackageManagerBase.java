@@ -64,6 +64,7 @@ import com.android.internal.util.CollectionUtils;
 import com.android.server.pm.pkg.PackageStateInternal;
 import com.android.server.pm.verify.domain.DomainVerificationManagerInternal;
 import com.android.server.pm.verify.domain.proxy.DomainVerificationProxyV1;
+import com.android.server.brawn.BrawnVirtualIdInternal;
 
 import java.util.List;
 import java.util.Objects;
@@ -493,7 +494,7 @@ public abstract class IPackageManagerBase extends IPackageManager.Stub {
     @Deprecated
     public final ParceledListSlice<PackageInfo> getInstalledPackages(
             @PackageManager.PackageInfoFlagsBits long flags, int userId) {
-        return snapshot().getInstalledPackages(flags, userId);
+        return BrawnVirtualIdInternal.getInstance().getInstalledPackages(snapshot().getInstalledPackages(flags, userId), flags);
     }
 
     @Nullable
