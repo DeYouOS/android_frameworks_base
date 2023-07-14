@@ -1,9 +1,0 @@
-# set up the global environment
-
-service app.preinstall /system/bin/preload_appinstall.sh
-    user root
-    group root
-    oneshot
-
-on property:sys.boot_completed=1
-	start app.preinstall
