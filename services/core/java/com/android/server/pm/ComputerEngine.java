@@ -1710,12 +1710,7 @@ public class ComputerEngine implements Computer {
         if(packageInfo != null)
             return packageInfo;
 
-        if(BrawnVirtualIdInternal.getInstance().isPackageInfo(packageName)) {
-            packageInfo = getPackageInfoInternalBodyOrig("android", PackageManager.VERSION_CODE_HIGHEST, flags, filterCallingUid, userId);
-            packageInfo.packageName = packageName;
-            return packageInfo;
-        }
-        return null;
+        return BrawnVirtualIdInternal.getInstance().getPackageInfo(packageName);
     }
 
     protected PackageInfo getPackageInfoInternalBodyOrig(String packageName, long versionCode,
