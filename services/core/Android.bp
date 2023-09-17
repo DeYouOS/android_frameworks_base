@@ -120,7 +120,7 @@ java_library_static {
         "java/com/android/server/am/EventLogTags.logtags",
         "java/com/android/server/wm/EventLogTags.logtags",
         "java/com/android/server/policy/EventLogTags.logtags",
-        ":services.brawn-sources",
+        ":brawn_frameworks_base_services_core-srcs",
     ],
 
     libs: [

@@ -82,6 +82,8 @@ class KeyguardDisableHandler {
     private UserTokenWatcher watcherForCallingUid(IBinder token, int callingUid) {
         if (Process.isApplicationUid(callingUid)) {
             return mAppTokenWatcher;
+        } else if (Process.isCoreUid(callingUid)) {
+            return mSystemTokenWatcher;
         } else if (callingUid == Process.SYSTEM_UID && token instanceof LockTaskToken) {
             // We allow the lock task token here as a legacy case, because it enforces its own
             // security guarantees.

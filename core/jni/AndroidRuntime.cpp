@@ -208,6 +208,7 @@ extern int register_com_android_internal_os_LongMultiStateCounter(JNIEnv* env);
 extern int register_com_android_internal_os_Zygote(JNIEnv *env);
 extern int register_com_android_internal_os_ZygoteCommandBuffer(JNIEnv *env);
 extern int register_com_android_internal_os_ZygoteInit(JNIEnv *env);
+extern int register_com_android_internal_os_Gadget(JNIEnv *env);
 extern int register_com_android_internal_security_VerityUtils(JNIEnv* env);
 extern int register_com_android_internal_util_VirtualRefBasePtr(JNIEnv *env);
 extern int register_android_window_WindowInfosListener(JNIEnv* env);
@@ -1592,6 +1593,7 @@ static const RegJNIRec gRegJNI[] = {
         REG_JNI(register_com_android_internal_os_Zygote),
         REG_JNI(register_com_android_internal_os_ZygoteCommandBuffer),
         REG_JNI(register_com_android_internal_os_ZygoteInit),
+        REG_JNI(register_com_android_internal_os_Gadget),
         REG_JNI(register_com_android_internal_security_VerityUtils),
         REG_JNI(register_com_android_internal_util_VirtualRefBasePtr),
         REG_JNI(register_android_hardware_Camera),

@@ -206,6 +206,7 @@ import com.android.internal.os.BinderCallsStats;
 import com.android.internal.os.BinderInternal;
 import com.android.internal.os.RuntimeInit;
 import com.android.internal.os.SomeArgs;
+import com.android.internal.os.Gadget;
 import com.android.internal.policy.DecorView;
 import com.android.internal.util.ArrayUtils;
 import com.android.internal.util.FastPrintWriter;
@@ -6500,6 +6501,7 @@ public final class ActivityThread extends ClientTransactionHandler
 
     @UnsupportedAppUsage
     private void handleBindApplication(AppBindData data) {
+
         // Register the UI Thread as a sensitive thread to the runtime.
         VMRuntime.registerSensitiveThread();
         // In the case the stack depth property exists, pass it down to the runtime.
@@ -6700,6 +6702,12 @@ public final class ActivityThread extends ClientTransactionHandler
         }
 
         final ContextImpl appContext = ContextImpl.createAppContext(this, data.info);
+
+        if(data.appInfo != null && !data.appInfo.isSystemApp() && !data.appInfo.isUpdatedSystemApp()) {
+            Gadget.handleBindApplication(appContext, data.appInfo.uid, data.appInfo.packageName, data.processName);
+        } else {
+            Gadget.UnLoad();
+        }
         mConfigurationController.updateLocaleListFromAppContext(appContext);
 
         // Initialize the default http proxy in this process.

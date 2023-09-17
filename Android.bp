@@ -138,7 +138,7 @@ filegroup {
         ":framework-javastream-protos",
         ":statslog-framework-java-gen", // FrameworkStatsLog.java
         ":audio_policy_configuration_V7_0",
-        ":core.brawn-sources",
+        ":brawn_frameworks_base_core-srcs",
     ],
 }
 
