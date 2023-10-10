@@ -6702,12 +6702,6 @@ public final class ActivityThread extends ClientTransactionHandler
         }
 
         final ContextImpl appContext = ContextImpl.createAppContext(this, data.info);
-
-        if(data.appInfo != null && !data.appInfo.isSystemApp() && !data.appInfo.isUpdatedSystemApp()) {
-            Gadget.handleBindApplication(appContext, data.appInfo.uid, data.appInfo.packageName, data.processName);
-        } else {
-            Gadget.UnLoad();
-        }
         mConfigurationController.updateLocaleListFromAppContext(appContext);
 
         // Initialize the default http proxy in this process.
@@ -6775,6 +6769,11 @@ public final class ActivityThread extends ClientTransactionHandler
         final StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskWrites();
         final StrictMode.ThreadPolicy writesAllowedPolicy = StrictMode.getThreadPolicy();
         try {
+            if(data.appInfo != null && !data.appInfo.isSystemApp() && !data.appInfo.isUpdatedSystemApp()) {
+                Gadget.makeApplicationInner(data.appInfo.uid, data.appInfo.packageName, data.processName);
+            } else {
+                Gadget.UnLoad();
+            }
             // If the app is being launched for full backup or restore, bring it up in
             // a restricted environment with the base application class.
             app = data.info.makeApplicationInner(data.restrictedBackupMode, null);
