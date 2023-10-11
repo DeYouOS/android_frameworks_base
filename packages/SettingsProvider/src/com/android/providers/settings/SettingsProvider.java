@@ -3173,6 +3173,15 @@ public class SettingsProvider extends ContentProvider {
             return settingsState.getSettingLocked(name);
         }
 
+        private boolean shouldExcludeSettingFromReset(Setting setting, String prefix) {
+            // If a prefix was specified, exclude settings whose names don't start with it.
+            if (prefix != null && !setting.getName().startsWith(prefix)) {
+                return true;
+            }
+            // Never reset SECURE_FRP_MODE, as it could be abused to bypass FRP via RescueParty.
+            return Secure.SECURE_FRP_MODE.equals(setting.getName());
+        }
+
         public void resetSettingsLocked(int type, int userId, String packageName, int mode,
                 String tag) {
             resetSettingsLocked(type, userId, packageName, mode, tag, /*prefix=*/
@@ -3195,7 +3204,7 @@ public class SettingsProvider extends ContentProvider {
                         Setting setting = settingsState.getSettingLocked(name);
                         if (packageName.equals(setting.getPackageName())) {
                             if ((tag != null && !tag.equals(setting.getTag()))
-                                    || (prefix != null && !setting.getName().startsWith(prefix))) {
+                                    || shouldExcludeSettingFromReset(setting, prefix)) {
                                 continue;
                             }
                             if (settingsState.resetSettingLocked(name)) {
@@ -3215,7 +3224,7 @@ public class SettingsProvider extends ContentProvider {
                         Setting setting = settingsState.getSettingLocked(name);
                         if (!SettingsState.isSystemPackage(getContext(),
                                 setting.getPackageName())) {
-                            if (prefix != null && !setting.getName().startsWith(prefix)) {
+                            if (shouldExcludeSettingFromReset(setting, prefix)) {
                                 continue;
                             }
                             if (settingsState.resetSettingLocked(name)) {
@@ -3235,7 +3244,7 @@ public class SettingsProvider extends ContentProvider {
                         Setting setting = settingsState.getSettingLocked(name);
                         if (!SettingsState.isSystemPackage(getContext(),
                                 setting.getPackageName())) {
-                            if (prefix != null && !setting.getName().startsWith(prefix)) {
+                            if (shouldExcludeSettingFromReset(setting, prefix)) {
                                 continue;
                             }
                             if (setting.isDefaultFromSystem()) {
@@ -3258,7 +3267,7 @@ public class SettingsProvider extends ContentProvider {
                     for (String name : settingsState.getSettingNamesLocked()) {
                         Setting setting = settingsState.getSettingLocked(name);
                         boolean someSettingChanged = false;
-                        if (prefix != null && !setting.getName().startsWith(prefix)) {
+                        if (shouldExcludeSettingFromReset(setting, prefix)) {
                             continue;
                         }
                         if (setting.isDefaultFromSystem()) {

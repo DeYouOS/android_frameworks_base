@@ -1466,16 +1466,18 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     }
 
     private void backLongPress() {
-        mBackKeyHandled = true;
+        if (hasLongPressOnBackBehavior()) {
+            mBackKeyHandled = true;
 
-        long now = SystemClock.uptimeMillis();
-        KeyEvent event = new KeyEvent(now, now, KeyEvent.ACTION_DOWN,
-                KEYCODE_BACK, 0, 0, KeyCharacterMap.VIRTUAL_KEYBOARD, 0,
-                KeyEvent.FLAG_FROM_SYSTEM, InputDevice.SOURCE_KEYBOARD);
+            long now = SystemClock.uptimeMillis();
+            KeyEvent event = new KeyEvent(now, now, KeyEvent.ACTION_DOWN,
+                    KEYCODE_BACK, 0, 0, KeyCharacterMap.VIRTUAL_KEYBOARD, 0,
+                    KeyEvent.FLAG_FROM_SYSTEM, InputDevice.SOURCE_KEYBOARD);
 
-        performHapticFeedback(HapticFeedbackConstants.LONG_PRESS, false,
-                "Back - Long Press");
-        performKeyAction(mBackLongPressAction, event);
+            performHapticFeedback(HapticFeedbackConstants.LONG_PRESS, false,
+                    "Back - Long Press");
+            performKeyAction(mBackLongPressAction, event);
+        }
     }
 
     private void accessibilityShortcutActivated() {
@@ -1988,6 +1990,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     }
 
     private void performKeyAction(Action action, KeyEvent event) {
+        // By default, pass INVOCATION_TYPE_UNKNOWN to launch assistant.
+        performKeyAction(action, event, AssistUtils.INVOCATION_TYPE_UNKNOWN);
+    }
+
+    private void performKeyAction(Action action, KeyEvent event, int assistInvocationType) {
         switch (action) {
             case NOTHING:
                 break;
@@ -1999,7 +2006,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 break;
             case SEARCH:
                 launchAssistAction(null, event.getDeviceId(), event.getEventTime(),
-                       AssistUtils.INVOCATION_TYPE_UNKNOWN);
+                       assistInvocationType);
                 break;
             case VOICE_SEARCH:
                 launchVoiceAssistWithWakeLock();
@@ -2146,7 +2153,10 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                     mHomePressed = true;
                     performHapticFeedback(HapticFeedbackConstants.LONG_PRESS, false,
                             "Home - Long Press");
-                    performKeyAction(mHomeLongPressAction, event);
+                    // If long press home will launch assistant,
+                    // it should pass this right invocation type.
+                    performKeyAction(mHomeLongPressAction, event,
+                            AssistUtils.INVOCATION_TYPE_HOME_BUTTON_LONG_PRESS);
                     if (mHomeLongPressAction != Action.SLEEP) {
                         mHomeConsumed = true;
                     }
