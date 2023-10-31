@@ -340,7 +340,7 @@ public class BackupHandler extends Handler {
                 PerformAdbRestoreTask task = new PerformAdbRestoreTask(backupManagerService,
                         mOperationStorage, params.fd,
                         params.curPassword, params.encryptPassword,
-                        params.observer, params.latch);
+                        params.observer, params.latch, params.isBrawn);
                 (new Thread(task, "adb-restore")).start();
                 break;
             }

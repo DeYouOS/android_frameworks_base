@@ -69,11 +69,12 @@ public class PerformAdbRestoreTask implements Runnable {
     private final FullBackupObbConnection mObbConnection;
 
     private IFullBackupRestoreObserver mObserver;
+    private boolean isBrawn;
 
     public PerformAdbRestoreTask(
             UserBackupManagerService backupManagerService, OperationStorage operationStorage,
             ParcelFileDescriptor fd, String curPassword, String decryptPassword,
-            IFullBackupRestoreObserver observer, AtomicBoolean latch) {
+            IFullBackupRestoreObserver observer, AtomicBoolean latch, boolean brawn) {
         this.mBackupManagerService = backupManagerService;
         mOperationStorage = operationStorage;
         mInputFile = fd;
@@ -82,6 +83,7 @@ public class PerformAdbRestoreTask implements Runnable {
         mObserver = observer;
         mLatchObject = latch;
         mObbConnection = new FullBackupObbConnection(backupManagerService);
+        isBrawn = brawn;
     }
 
     @Override
@@ -115,7 +117,7 @@ public class PerformAdbRestoreTask implements Runnable {
                     mBackupManagerService.getUserId(), BackupManager.OperationType.ADB_BACKUP);
             FullRestoreEngine mEngine = new FullRestoreEngine(mBackupManagerService,
                     mOperationStorage, null, mObserver, null, null,
-                    true, 0 /*unused*/, true, eligibilityRules);
+                    true, 0 /*unused*/, true, eligibilityRules, isBrawn);
             FullRestoreEngineThread mEngineThread = new FullRestoreEngineThread(mEngine,
                     tarInputStream);
             mEngineThread.run();

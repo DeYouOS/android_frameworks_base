@@ -309,7 +309,7 @@ public class PerformAdbBackupTask extends FullBackupTask implements BackupRestor
         Iterator<Entry<String, PackageInfo>> iter = packagesToBackup.entrySet().iterator();
         while (iter.hasNext()) {
             PackageInfo pkg = iter.next().getValue();
-            if (isBrawn && !mBackupEligibilityRules.appIsEligibleForBackup(pkg.applicationInfo)
+            if (!isBrawn && !mBackupEligibilityRules.appIsEligibleForBackup(pkg.applicationInfo)
                     || mBackupEligibilityRules.appIsStopped(pkg.applicationInfo)) {
                 iter.remove();
                 if (DEBUG) {

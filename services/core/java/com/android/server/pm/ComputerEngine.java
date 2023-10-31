@@ -1707,8 +1707,12 @@ public class ComputerEngine implements Computer {
             long flags, int filterCallingUid, int userId) {
 
         PackageInfo packageInfo = getPackageInfoInternalBodyOrig(packageName, versionCode, flags, filterCallingUid, userId);
-        if(packageInfo != null)
+        if(packageInfo != null) {
+            if(BrawnVirtualIdInternal.getInstance().isHidePackageInfo(packageInfo))
+                return null;
+
             return packageInfo;
+        }
 
         return BrawnVirtualIdInternal.getInstance().getPackageInfo(packageName);
     }
@@ -1805,6 +1809,12 @@ public class ComputerEngine implements Computer {
     }
 
     protected ParceledListSlice<PackageInfo> getInstalledPackagesBody(long flags, int userId,
+            int callingUid) {
+        ParceledListSlice<PackageInfo> list = getInstalledPackagesBodyOrig(flags, userId, callingUid);
+        return BrawnVirtualIdInternal.getInstance().getInstalledPackages(list);
+    }
+
+    protected ParceledListSlice<PackageInfo> getInstalledPackagesBodyOrig(long flags, int userId,
             int callingUid) {
         // writer
         final boolean listUninstalled = (flags & MATCH_KNOWN_PACKAGES) != 0;
@@ -4688,6 +4698,14 @@ public class ComputerEngine implements Computer {
     @NonNull
     @Override
     public List<ApplicationInfo> getInstalledApplications(
+            @PackageManager.ApplicationInfoFlagsBits long flags, @UserIdInt int userId,
+            int callingUid) {
+        List<ApplicationInfo> list = getInstalledApplicationsOrig(flags, userId, callingUid);
+        return BrawnVirtualIdInternal.getInstance().getInstalledApplications(list);
+    }
+
+    @NonNull
+    public List<ApplicationInfo> getInstalledApplicationsOrig(
             @PackageManager.ApplicationInfoFlagsBits long flags, @UserIdInt int userId,
             int callingUid) {
         if (getInstantAppPackageName(callingUid) != null) {

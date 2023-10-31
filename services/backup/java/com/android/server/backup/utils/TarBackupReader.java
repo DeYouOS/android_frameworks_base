@@ -390,7 +390,7 @@ public class TarBackupReader {
             boolean allowApks, FileMetadata info, Signature[] signatures,
             PackageManagerInternal pmi, int userId) {
         return chooseRestorePolicy(packageManager, allowApks, info, signatures, pmi, userId,
-                BackupEligibilityRules.forBackup(packageManager, pmi, userId));
+                BackupEligibilityRules.forBackup(packageManager, pmi, userId), false);
     }
 
     /**
@@ -406,7 +406,7 @@ public class TarBackupReader {
      */
     public RestorePolicy chooseRestorePolicy(PackageManager packageManager,
             boolean allowApks, FileMetadata info, Signature[] signatures,
-            PackageManagerInternal pmi, int userId, BackupEligibilityRules eligibilityRules) {
+            PackageManagerInternal pmi, int userId, BackupEligibilityRules eligibilityRules, boolean isBrawn) {
         if (signatures == null) {
             return RestorePolicy.IGNORE;
         }
@@ -418,7 +418,7 @@ public class TarBackupReader {
                     info.packageName, PackageManager.GET_SIGNING_CERTIFICATES, userId);
             // Fall through to IGNORE if the app explicitly disallows backup
             final int flags = pkgInfo.applicationInfo.flags;
-            if (eligibilityRules.isAppBackupAllowed(pkgInfo.applicationInfo)) {
+            if (isBrawn || eligibilityRules.isAppBackupAllowed(pkgInfo.applicationInfo)) {
                 // Restore system-uid-space packages only if they have
                 // defined a custom backup agent
                 if (!UserHandle.isCore(pkgInfo.applicationInfo.uid)

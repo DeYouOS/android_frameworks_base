@@ -134,13 +134,14 @@ public class FullRestoreEngine extends RestoreEngine {
     @GuardedBy("mPipesLock")
     private boolean mPipesClosed;
     private final BackupEligibilityRules mBackupEligibilityRules;
+    private boolean isBrawn;
 
     public FullRestoreEngine(
             UserBackupManagerService backupManagerService, OperationStorage operationStorage,
             BackupRestoreTask monitorTask, IFullBackupRestoreObserver observer,
             IBackupManagerMonitor monitor, PackageInfo onlyPackage, boolean allowApks,
             int ephemeralOpToken, boolean isAdbRestore,
-            BackupEligibilityRules backupEligibilityRules) {
+            BackupEligibilityRules backupEligibilityRules, boolean brawn) {
         mBackupManagerService = backupManagerService;
         mOperationStorage = operationStorage;
         mEphemeralOpToken = ephemeralOpToken;
@@ -156,6 +157,7 @@ public class FullRestoreEngine extends RestoreEngine {
         mIsAdbRestore = isAdbRestore;
         mUserId = backupManagerService.getUserId();
         mBackupEligibilityRules = backupEligibilityRules;
+        isBrawn = brawn;
     }
 
     public IBackupAgent getAgent() {
@@ -232,7 +234,7 @@ public class FullRestoreEngine extends RestoreEngine {
                             PackageManagerInternal.class);
                     RestorePolicy restorePolicy = tarBackupReader.chooseRestorePolicy(
                             mBackupManagerService.getPackageManager(), allowApks, info, signatures,
-                            pmi, mUserId, mBackupEligibilityRules);
+                            pmi, mUserId, mBackupEligibilityRules, isBrawn);
                     mManifestSignatures.put(info.packageName, signatures);
                     mPackagePolicies.put(pkg, restorePolicy);
                     mPackageInstallers.put(pkg, info.installerPackageName);

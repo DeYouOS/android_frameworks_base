@@ -494,7 +494,7 @@ public abstract class IPackageManagerBase extends IPackageManager.Stub {
     @Deprecated
     public final ParceledListSlice<PackageInfo> getInstalledPackages(
             @PackageManager.PackageInfoFlagsBits long flags, int userId) {
-        return BrawnVirtualIdInternal.getInstance().getInstalledPackages(snapshot().getInstalledPackages(flags, userId), flags);
+        return snapshot().getInstalledPackages(flags, userId);
     }
 
     @Nullable

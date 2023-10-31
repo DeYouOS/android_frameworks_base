@@ -928,7 +928,7 @@ public class PerformUnifiedRestoreTask implements BackupRestoreTask {
 
             mEngine = new FullRestoreEngine(backupManagerService, mOperationStorage, this, null,
                     mMonitor, mCurrentPackage, false, mEphemeralOpToken, false,
-                    mBackupEligibilityRules);
+                    mBackupEligibilityRules, false);
             mEngineThread = new FullRestoreEngineThread(mEngine, mEnginePipes[0]);
 
             ParcelFileDescriptor eWriteEnd = mEnginePipes[1];
